@@ -1,0 +1,75 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+
+# Testing & Coverage
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+
+# Browser profiles and cached sessions (CRITICAL: NEVER COMMIT BROWSER PROFILES)
+data/
+browser_profile/
+data/browser_profile/
+*.local_profile/
+cookies.json
+auth.json
+Default/
+
+# Databases & runtime storage
+*.db
+*.sqlite
+*.sqlite3
+storage/*.db
+
+# Logs and screenshots
+*.log
+logs/
+screenshots/
+recordings/
+
+# Environment and secrets
+.env
+.env.local
+*.pem
+*.key
+
+# IDE and OS
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.swo
