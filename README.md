@@ -155,26 +155,41 @@ course-automation status cu-oops-sem3-2026-c2
 ```
 
 ### 4. Process / Assist with Activities
-Process incomplete activities with safety approval prompts:
+Process incomplete activities with safety approval prompts and checkpointing:
 ```bash
-# Auto-detect active course and simulate (dry run):
-course-automation solve --dry-run
+# Theory-based course automation (e.g. DBMS):
+course-automation solve https://www.codechef.com/learn/course/cu-dbms-sem3-2026-c2 --theory-only --max-activities 5 --dry-run
+
+# Run live theory & MCQ progression (with interactive confirmation before each submission):
+course-automation solve https://www.codechef.com/learn/course/cu-dbms-sem3-2026-c2 --theory-only --max-activities 5
+
+# Automated run (bypass prompts):
+course-automation solve https://www.codechef.com/learn/course/cu-dbms-sem3-2026-c2 --theory-only --max-activities 10 --auto-approve
+
+# Target a specific problem or quiz:
+course-automation solve https://www.codechef.com/learn/course/cu-dbms-sem3-2026-c2 --activity CLGDBMSP08 --dry-run
 
 # Select a specific module interactively:
 course-automation solve --select-module
-
-# Target a specific problem:
-course-automation solve https://www.codechef.com/learn/course/cu-adsa-sem3-2026-c2 --activity INSSRTASCD
 ```
 
 ---
 
-## Activity Handlers
+## Activity Handlers & Theory Automation
 
+- **`TheoryLessonActivityHandler`:** Automates theory reading concepts:
+  - Incrementally scrolls through the lesson to trigger dynamic content, MathJax, and code blocks.
+  - Dynamically discovers enabled **Next** / **Continue** navigation controls across accessible roles and CSS classes.
+  - Advances sequentially to the next lesson only when confirmed by the platform.
+- **`QuizActivityHandler`:** Full automated workflow for multiple-choice questions:
+  - **DOM Extraction:** Extracts full question prompts (combining problem body and MCQ instructions) and structured options with their corresponding radio locators.
+  - **AI Reasoning:** Passes prompt and options to configured AI provider for structured reasoning, candidate matching, and confidence evaluation.
+  - **Human Review Gate:** If AI confidence is below 85%, execution halts and prompts for human approval instead of guessing.
+  - **Selection & Verification:** Clicks the matching option, verifies that the radio element transitioned to `is_checked=True`, clicks Submit, and parses the platform's feedback banner (`ACCEPTED` vs `WRONG_ANSWER`).
+  - **Graceful Fallback:** If an activity is classified as a quiz in metadata but contains purely reading material without radio options (common in CodeChef concept pages), automatically delegates to `TheoryLessonActivityHandler`.
 - **`CodingActivityHandler`:** Handles Monaco and Ace web IDEs across any programming language (**C++, Java, C, Python**). Uses base64 buffer injection to prevent quotation or newline corruption, checks compilation, and polls judge verdicts.
-- **`QuizActivityHandler`:** Extracts multiple-choice questions and options, generates suggestions with explanations, and enforces human review before proceeding.
-- **`TheoryLessonActivityHandler`:** Inspects reading articles and video lessons without fabricating false completion.
 - **`LockedOrUnsupportedActivityHandler`:** Identifies locked assessments or prerequisite gates honestly (`LOCKED_SKIPPED`).
+- **`TheoryCourseNavigator`:** Coordinates sequential multi-lesson progress with SQLite checkpointing, filtering (`--theory-only`, `--coding-only`), and step-by-step Rich terminal summaries.
 
 ---
 
@@ -189,7 +204,7 @@ course-automation solve https://www.codechef.com/learn/course/cu-adsa-sem3-2026-
 
 ## Running Automated Tests
 
-Run the full automated test suite (38 unit & regression tests):
+Run the full automated test suite (60 unit, regression, and theory/MCQ tests):
 ```bash
 pytest -v
 ```

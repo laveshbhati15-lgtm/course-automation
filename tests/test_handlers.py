@@ -71,10 +71,18 @@ def test_quiz_handler():
     page.locator.side_effect = mock_loc
 
     ai = MagicMock()
-    ai.solve_mcq.return_value = ("B) 4 bytes", "Standard sizeof(int) is 4 on 32/64 bit systems.")
+    from course_automation.ai.base import MCQReasoningResult
+    ai.reason_mcq.return_value = MCQReasoningResult(
+        question="What is the size of int in C++?",
+        options=["A) 2 bytes", "B) 4 bytes"],
+        selected_option_index=2,
+        selected_option_text="B) 4 bytes",
+        confidence=0.95,
+        explanation="Standard sizeof(int) is 4 on 32/64 bit systems.",
+    )
 
-    record = handler.execute(quiz_act, page, ai_provider=ai)
-    assert record.verdict == "SUGGESTION_READY"
+    record = handler.execute(quiz_act, page, ai_provider=ai, dry_run=True)
+    assert record.verdict == "DRY_RUN_PASSED"
     assert "B) 4 bytes" in record.details
 
 

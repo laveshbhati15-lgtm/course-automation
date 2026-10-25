@@ -15,7 +15,9 @@ class CodingActivityHandler(BaseActivityHandler):
     """Processes coding problems and labs across any programming language."""
 
     def can_handle(self, activity: ActivitySummary, page: Page) -> bool:
-        """Handle if activity is CODING or if an editor is mounted in the DOM."""
+        """Handle if activity is CODING, or if an editor is mounted and visible."""
+        if activity.type in (ActivityType.QUIZ, ActivityType.THEORY):
+            return False
         if activity.type == ActivityType.CODING:
             return True
         return MonacoEditorController.is_editor_present(page)

@@ -129,13 +129,26 @@ class CodeChefSyllabusParser:
 
                         total_activities += 1
 
+                        # Classify type based on contentType or problem name
+                        raw_content_type = str(act.get("contentType") or act.get("type") or "").lower()
+                        act_title_lower = act_name.lower()
+
+                        if raw_content_type == "mcq" or "mcq" in act_title_lower or "quiz" in act_title_lower:
+                            act_type = ActivityType.QUIZ
+                        elif raw_content_type in ["default", "reading", "concept", "theory", "video"] or "what are" in act_title_lower or "introduction" in act_title_lower:
+                            act_type = ActivityType.THEORY
+                        elif raw_content_type in ["labs", "problem", "coding"]:
+                            act_type = ActivityType.CODING
+                        else:
+                            act_type = ActivityType.CODING if (act.get("difficulty_rating") and act.get("difficulty_rating") != "-1") else ActivityType.THEORY
+
                         act_url = f"https://www.codechef.com/learn/course/{course_slug}/{contest_code}/problems/{act_code}"
                         activities.append(
                             ActivitySummary(
                                 id=act_code,
                                 title=act_name,
                                 slug=act_code,
-                                type=ActivityType.CODING,
+                                type=act_type,
                                 status=act_status,
                                 url=act_url,
                                 module_id=mod_id,

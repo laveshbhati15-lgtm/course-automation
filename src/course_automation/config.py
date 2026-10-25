@@ -2,7 +2,7 @@
 
 from pathlib import Path
 from typing import Literal, Optional
-from pydantic import Field
+from pydantic import AliasChoices, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -10,7 +10,7 @@ class Settings(BaseSettings):
     """Application settings loaded from environment variables and .env file."""
 
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=(".env", str(Path.home() / "ai agent" / ".env")),
         env_file_encoding="utf-8",
         extra="ignore"
     )
@@ -22,10 +22,11 @@ class Settings(BaseSettings):
     )
     gemini_api_key: Optional[str] = Field(
         default=None,
-        description="Google Gemini API key."
+        validation_alias=AliasChoices("gemini_api_key", "google_api_key"),
+        description="Google Gemini or Google AI Studio API key."
     )
     gemini_model: str = Field(
-        default="gemini-2.5-flash",
+        default="gemini-flash-lite-latest",
         description="Default Gemini model to use for solving."
     )
 

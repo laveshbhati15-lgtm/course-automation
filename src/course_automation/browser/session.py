@@ -90,12 +90,10 @@ class BrowserSession:
     def close(self) -> None:
         """Safely disconnect or close browser session."""
         try:
-            if self._browser and self._is_cdp:
-                # For CDP, disconnect client without killing user's browser
-                self._browser.close()
-            elif self._context:
+            if self._context and not self._is_cdp:
                 # For standalone persistent context, close it cleanly
                 self._context.close()
+            # For CDP, we do not close the user's browser or context
         except Exception as e:
             logger.debug(f"Browser cleanup error: {e}")
         finally:

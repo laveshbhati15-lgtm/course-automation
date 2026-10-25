@@ -242,21 +242,26 @@ def status(
 def solve(
     url: Optional[str] = typer.Argument(
         None,
-        help="Course URL to solve. If omitted, automatically detects active course in your browser.",
+        help="Course URL to process. If omitted, automatically detects active course in your browser.",
     ),
     activity_id: Optional[str] = typer.Option(None, "--activity", help="Specific activity ID to solve"),
     module_id: Optional[str] = typer.Option(None, "--module", help="Specific module ID or slug to process"),
     select_module: bool = typer.Option(False, "--select-module", help="Interactively select a module to process"),
-    dry_run: bool = typer.Option(False, "--dry-run", help="Simulate without submitting"),
-    auto_approve: bool = typer.Option(False, "--auto-approve", help="Bypass interactive confirmation prompt"),
-    use_ai: bool = typer.Option(True, "--ai/--no-ai", help="Use AI provider to generate solutions"),
+    theory_only: bool = typer.Option(False, "--theory-only", help="Process theory reading lessons and MCQs only (e.g. DBMS)"),
+    coding_only: bool = typer.Option(False, "--coding-only", help="Process coding exercises and labs only"),
+    max_activities: int = typer.Option(10, "--max-activities", help="Maximum number of activities to process in this run"),
+    dry_run: bool = typer.Option(False, "--dry-run", help="Safe dry-run: inspect pages and reason about answers without clicking or submitting"),
+    auto_approve: bool = typer.Option(False, "--auto-approve", help="Bypass interactive terminal confirmation prompts"),
+    use_ai: bool = typer.Option(True, "--ai/--no-ai", help="Use AI provider to reason and generate answers/solutions"),
 ):
-    """Process or solve course activities with optional AI assistance and safety gates."""
+    """Process or solve course activities (theory, MCQs, or coding) with safety gates and checkpointing."""
+    from course_automation.sites.codechef.navigator import TheoryCourseNavigator
+
     db = DatabaseManager()
     safety = SafetyGate(dry_run=dry_run, auto_approve=auto_approve)
 
     ai_provider = None
-    if use_ai and settings.ai_provider == "gemini":
+    if use_ai and (settings.ai_provider == "gemini" or settings.gemini_api_key):
         try:
             ai_provider = GeminiProvider(
                 api_key=settings.gemini_api_key,
@@ -277,15 +282,14 @@ def solve(
 
         adapter = get_adapter(url)
         page = session.get_or_create_page()
-        summary = adapter.inspect_course(page, url)
-        db.save_course_summary(summary)
 
-        # Module selection
+        # Module selection if requested
         target_mod_id = module_id
         if select_module and not target_mod_id:
+            summary = adapter.inspect_course(page, url)
             console.print("\n[bold cyan]Select Module / Unit to Process:[/bold cyan]")
             for idx, mod in enumerate(summary.modules, 1):
-                console.print(f"  [{idx}] {mod.title} ({mod.completion_pct}% complete)")
+                console.print(f"  [{idx}] {mod.title} ({mod.completion_pct}% complete, {len(mod.activities)} activities)")
             choice = Prompt.ask(
                 "Select module number",
                 choices=[str(i) for i in range(1, len(summary.modules) + 1)],
@@ -293,33 +297,54 @@ def solve(
             )
             target_mod_id = summary.modules[int(choice) - 1].id
 
-        targets = []
-        for mod in summary.modules:
-            if target_mod_id and mod.id != target_mod_id and mod.slug != target_mod_id:
-                continue
-            for act in mod.activities:
-                if activity_id and act.id != activity_id and act.slug != activity_id:
-                    continue
-                if not activity_id and act.status == ActivityStatus.COMPLETED:
-                    continue
-                targets.append(act)
+        navigator = TheoryCourseNavigator(
+            adapter=adapter,
+            db=db,
+            safety_gate=safety,
+            ai_provider=ai_provider,
+            dry_run=dry_run,
+            max_activities=max_activities,
+            theory_only=theory_only,
+            coding_only=coding_only,
+        )
 
-        console.print(f"[cyan]Found {len(targets)} target activities to process.[/cyan]")
+        console.print(f"[cyan]Starting course navigation (dry_run={dry_run}, theory_only={theory_only})...[/cyan]")
+        report = navigator.run(
+            page=page,
+            course_url=url,
+            module_id=target_mod_id,
+            start_activity_id=activity_id,
+        )
 
-        for act in targets:
-            console.print(f"\nProcessing activity: [bold]{act.title}[/bold] ({act.id}) [{act.type.value}]")
-            if not safety.confirm_action(f"Process {act.title}"):
-                console.print(f"[yellow]Skipped {act.title}.[/yellow]")
-                continue
+        # Output Rich Summary Table
+        table = Table(
+            title=f"Navigation Run: {report.course_title} ({'DRY RUN' if report.dry_run else 'LIVE EXECUTION'})",
+            show_header=True,
+            header_style="bold cyan",
+        )
+        table.add_column("Activity", style="bold", width=34)
+        table.add_column("Type", style="cyan", width=12)
+        table.add_column("Verdict", width=18)
+        table.add_column("Details", style="white", width=42)
 
-            record = adapter.solve_activity(
-                page=page,
-                activity=act,
-                ai_provider=ai_provider,
-                dry_run=dry_run,
+        for step in report.steps:
+            v_style = "green" if step.verdict in ("ACCEPTED", "DRY_RUN_PASSED") else (
+                "yellow" if "SKIPPED" in step.verdict else "red"
             )
-            db.record_submission(record, summary.slug)
-            console.print(f"Result: [bold]{record.verdict}[/bold] - {record.details}")
+            table.add_row(
+                step.activity_title,
+                step.activity_type.value,
+                f"[{v_style}]{step.verdict}[/{v_style}]",
+                step.details[:60],
+            )
+
+        console.print(table)
+        console.print(
+            f"\n[bold]Run Complete:[/bold] {report.total_processed} processed, "
+            f"[green]{report.completed_count} completed[/green], "
+            f"[yellow]{report.skipped_count} skipped[/yellow], "
+            f"[red]{report.failed_count} failed[/red]."
+        )
 
 
 def main():

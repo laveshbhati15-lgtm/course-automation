@@ -1,7 +1,9 @@
 """Google Gemini AI provider implementation using google-genai."""
 
+import json
+import re
 from typing import List, Optional, Tuple
-from course_automation.ai.base import BaseAIProvider
+from course_automation.ai.base import BaseAIProvider, MCQReasoningResult
 from course_automation.ai.sanitizer import redact_secrets
 from course_automation.logger import logger
 
@@ -79,35 +81,99 @@ class GeminiProvider(BaseAIProvider):
         options: List[str]
     ) -> Tuple[str, str]:
         """Solve multiple choice question, returning chosen option and explanation."""
+        result = self.reason_mcq(question, options)
+        return result.selected_option_text, result.explanation
+
+    def reason_mcq(
+        self,
+        question: str,
+        options: List[str],
+        context: str = ""
+    ) -> MCQReasoningResult:
+        """Perform structured reasoning over MCQ with step-by-step evaluation and confidence."""
         clean_q = redact_secrets(question)
-        clean_options = [f"- {redact_secrets(opt)}" for opt in options]
+        clean_options = [f"[{i+1}] {redact_secrets(opt)}" for i, opt in enumerate(options)]
         options_text = "\n".join(clean_options)
+        clean_ctx = redact_secrets(context[:1500]) if context else ""
 
         prompt = (
-            f"Answer the following multiple-choice question.\n"
+            f"You are an academic computer science expert and educator.\n"
+            f"Evaluate the following multiple-choice question against the provided options.\n\n"
+        )
+        if clean_ctx:
+            prompt += f"Lesson Context / Reference Notes:\n{clean_ctx}\n\n"
+
+        prompt += (
             f"Question:\n{clean_q}\n\n"
             f"Options:\n{options_text}\n\n"
-            f"Provide your answer in the following format:\n"
-            f"ANSWER: [exact text of the chosen option]\n"
-            f"EXPLANATION: [brief 1-2 sentence explanation]\n"
+            f"Carefully reason about each option. Identify the single best correct choice.\n"
+            f"Respond strictly in the following JSON format:\n"
+            f"{{\n"
+            f'  "selected_option_index": <1-based integer index of correct option>,\n'
+            f'  "selected_option_text": "<exact string text of chosen option>",\n'
+            f'  "confidence": <float between 0.0 and 1.0 representing certainty>,\n'
+            f'  "explanation": "<step-by-step explanation why this option is correct>",\n'
+            f'  "supporting_evidence": "<key concept, theorem, or DBMS principle justifying choice>"\n'
+            f"}}\n"
         )
 
+        logger.info(f"Querying Gemini ({self.model_name}) for structured MCQ reasoning...")
         response = self._client.models.generate_content(
             model=self.model_name,
             contents=prompt,
         )
-        text = response.text or ""
+        raw_text = self._strip_markdown_fences(response.text or "{}")
 
-        answer = ""
-        explanation = ""
-        for line in text.splitlines():
-            line = line.strip()
-            if line.startswith("ANSWER:"):
-                answer = line.replace("ANSWER:", "").strip()
-            elif line.startswith("EXPLANATION:"):
-                explanation = line.replace("EXPLANATION:", "").strip()
+        try:
+            # Parse JSON
+            match = re.search(r"\{[\s\S]*\}", raw_text)
+            json_str = match.group(0) if match else raw_text
+            data = json.loads(json_str)
 
-        if not answer and text:
-            answer = text.splitlines()[0].strip()
+            opt_idx = data.get("selected_option_index")
+            opt_text = data.get("selected_option_text") or ""
+            confidence = float(data.get("confidence", 0.85))
+            explanation = data.get("explanation") or ""
+            evidence = data.get("supporting_evidence") or ""
 
-        return answer, explanation
+            # Validate index bounds
+            if isinstance(opt_idx, int) and 1 <= opt_idx <= len(options):
+                if not opt_text:
+                    opt_text = options[opt_idx - 1]
+            else:
+                opt_idx = None
+
+            # Determine if human confirmation should be flagged
+            requires_human = confidence < 0.85 or opt_idx is None
+
+            return MCQReasoningResult(
+                question=question,
+                options=options,
+                selected_option_index=opt_idx,
+                selected_option_text=opt_text,
+                confidence=confidence,
+                explanation=explanation,
+                supporting_evidence=evidence,
+                requires_human_confirmation=requires_human,
+            )
+
+        except Exception as e:
+            logger.warning(f"Failed to parse Gemini structured JSON: {e}. Falling back to text matching.")
+            # Fallback text parsing
+            matched_idx = None
+            chosen_text = ""
+            for i, opt in enumerate(options, 1):
+                if opt.lower() in raw_text.lower():
+                    matched_idx = i
+                    chosen_text = opt
+                    break
+
+            return MCQReasoningResult(
+                question=question,
+                options=options,
+                selected_option_index=matched_idx,
+                selected_option_text=chosen_text or (options[0] if options else ""),
+                confidence=0.6 if matched_idx else 0.3,
+                explanation=raw_text[:200],
+                requires_human_confirmation=True,
+            )

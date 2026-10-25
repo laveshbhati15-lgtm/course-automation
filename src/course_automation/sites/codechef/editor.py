@@ -12,14 +12,15 @@ class MonacoEditorController:
 
     @staticmethod
     def is_editor_present(page: Page) -> bool:
-        """Check whether a Monaco or Ace code editor is mounted on the page."""
+        """Check whether a Monaco or Ace code editor is mounted and visible on the page."""
         try:
             return bool(
                 page.evaluate(
                     """() => {
-                        return (window.monaco && window.monaco.editor && window.monaco.editor.getModels().length > 0)
-                            || (window.ace && typeof window.ace.edit === 'function')
-                            || (document.querySelector('.monaco-editor') !== null);
+                        const monacoEl = document.querySelector('.monaco-editor');
+                        const isMonacoVisible = monacoEl && (monacoEl.offsetWidth > 0 || monacoEl.offsetHeight > 0 || monacoEl.getClientRects().length > 0);
+                        const isAce = window.ace && typeof window.ace.edit === 'function' && document.querySelector('.ace_editor');
+                        return Boolean(isMonacoVisible || isAce);
                     }"""
                 )
             )
