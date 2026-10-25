@@ -27,10 +27,10 @@ class CodeChefSyllabusParser:
         match = cls.SLUG_PATTERN.search(url_or_slug)
         if match:
             return match.group(1)
-        # Fallback for raw slug or short path
         cleaned = url_or_slug.strip().strip("/")
         parts = cleaned.split("/")
-        return parts[-1]
+        res = parts[-1] if parts else ""
+        return "" if res in ("course", "learn") else res
 
     @classmethod
     def fetch_syllabus_api(cls, page: Page, course_slug: str) -> Optional[Dict[str, Any]]:
@@ -57,10 +57,28 @@ class CodeChefSyllabusParser:
             return None
 
     @classmethod
+    def infer_course_language(cls, course_slug: str, course_name: str) -> str:
+        """Heuristically infer default language from course title or slug."""
+        text = f"{course_slug} {course_name}".lower()
+        if "java" in text or "oops" in text:
+            return "java"
+        elif "python" in text or "pyth" in text:
+            return "python3"
+        elif "adsa" in text or "cpp" in text or "c++" in text:
+            return "cpp"
+        elif " b1" in text or "-b1" in text:
+            return "c"
+        return "cpp"
+
+    @classmethod
     def parse_api_data(cls, data: Dict[str, Any], course_url: str, course_slug: str) -> CourseSummary:
-        """Parse raw syllabus JSON data into standard CourseSummary hierarchy."""
-        course_title = data.get("course_name") or data.get("title") or course_slug.replace("-", " ").title()
-        course_id = str(data.get("course_id", course_slug))
+        """Parse raw syllabus JSON data into standard CourseSummary hierarchy.
+        
+        Handles both the live CodeChef structure (modules -> submodules -> problems_with_status)
+        and flat structure (modules -> activities/items).
+        """
+        course_title = data.get("course_name") or data.get("name") or data.get("title") or course_slug.replace("-", " ").title()
+        course_id = str(data.get("slug") or data.get("course_id") or course_slug)
         raw_modules = (
             data.get("modules")
             or data.get("units")
@@ -68,6 +86,8 @@ class CodeChefSyllabusParser:
             or data.get("curriculum")
             or []
         )
+
+        default_lang = cls.infer_course_language(course_slug, course_title)
 
         modules: List[ModuleSummary] = []
         total_activities = 0
@@ -78,73 +98,113 @@ class CodeChefSyllabusParser:
             mod_id = str(mod.get("id") or f"mod_{mod_idx}")
             mod_slug = mod.get("slug") or mod_id
 
-            items = (
-                mod.get("activities")
-                or mod.get("items")
-                or mod.get("lessons")
-                or mod.get("problems")
-                or []
-            )
             activities: List[ActivitySummary] = []
             mod_completed = 0
 
-            for act_idx, act in enumerate(items, 1):
-                act_title = act.get("name") or act.get("title") or f"Activity {act_idx}"
-                act_id = str(act.get("id") or act.get("code") or f"act_{act_idx}")
-                act_slug = act.get("slug") or act.get("code") or act_id
+            # 1. Check for live CodeChef submodules structure
+            submodules = mod.get("submodules") or []
+            if submodules:
+                for sub in submodules:
+                    contest_code = sub.get("contest_code") or mod_slug
+                    prob_list = sub.get("problems_with_status") or sub.get("problems") or []
+                    for act_idx, act in enumerate(prob_list, 1):
+                        act_code = act.get("code") or act.get("id") or f"act_{act_idx}"
+                        act_name = act.get("name") or act_code
+                        raw_status = str(act.get("status") or "").lower()
 
-                # Dynamic activity type classification
-                raw_type = str(act.get("type") or act.get("item_type") or "").upper()
-                if any(k in raw_type for k in ["PROBLEM", "CODE", "LAB", "CODING"]):
-                    act_type = ActivityType.CODING
-                elif any(k in raw_type for k in ["QUIZ", "MCQ", "ASSESSMENT"]):
-                    act_type = ActivityType.QUIZ
-                elif any(k in raw_type for k in ["THEORY", "READ", "VIDEO", "ARTICLE"]):
-                    act_type = ActivityType.THEORY
-                else:
-                    act_type = ActivityType.UNKNOWN
+                        is_solved = (raw_status == "solved") or act.get("is_solved") or act.get("completed")
+                        is_locked = (raw_status == "locked") or act.get("is_locked")
+                        is_in_progress = raw_status in ["attempted", "partially_solved", "in_progress"]
 
-                # Dynamic status classification
-                raw_status = str(act.get("status") or "").lower()
-                is_solved = bool(act.get("is_solved") or act.get("completed") or (raw_status in ["completed", "solved", "submitted"]))
-                is_locked = bool(act.get("is_locked") or (raw_status == "locked"))
+                        if is_solved:
+                            act_status = ActivityStatus.COMPLETED
+                            mod_completed += 1
+                            completed_activities += 1
+                        elif is_locked:
+                            act_status = ActivityStatus.LOCKED
+                        elif is_in_progress:
+                            act_status = ActivityStatus.IN_PROGRESS
+                        else:
+                            act_status = ActivityStatus.NOT_STARTED
 
-                if is_solved:
-                    act_status = ActivityStatus.COMPLETED
-                    mod_completed += 1
-                    completed_activities += 1
-                elif is_locked:
-                    act_status = ActivityStatus.LOCKED
-                elif raw_status in ["attempted", "partially_solved", "in_progress"]:
-                    act_status = ActivityStatus.IN_PROGRESS
-                else:
-                    act_status = ActivityStatus.NOT_STARTED
+                        total_activities += 1
 
-                total_activities += 1
-
-                # Construct activity URL
-                act_url = act.get("url") or ""
-                if not act_url:
-                    base_course = f"https://www.codechef.com/learn/course/{course_slug}"
-                    if act_type == ActivityType.CODING:
-                        act_url = f"{base_course}/{mod_slug}/problems/{act_slug}"
-                    else:
-                        act_url = f"{base_course}/{mod_slug}/lesson/{act_slug}"
-
-                activities.append(
-                    ActivitySummary(
-                        id=act_id,
-                        title=act_title,
-                        slug=act_slug,
-                        type=act_type,
-                        status=act_status,
-                        url=act_url,
-                        module_id=mod_id,
-                        language=act.get("language") or data.get("language"),
-                    )
+                        act_url = f"https://www.codechef.com/learn/course/{course_slug}/{contest_code}/problems/{act_code}"
+                        activities.append(
+                            ActivitySummary(
+                                id=act_code,
+                                title=act_name,
+                                slug=act_code,
+                                type=ActivityType.CODING,
+                                status=act_status,
+                                url=act_url,
+                                module_id=mod_id,
+                                language=default_lang,
+                            )
+                        )
+            else:
+                # 2. Check for flat activities / items / lessons structure
+                items = (
+                    mod.get("activities")
+                    or mod.get("items")
+                    or mod.get("lessons")
+                    or mod.get("problems")
+                    or []
                 )
+                for act_idx, act in enumerate(items, 1):
+                    act_title = act.get("name") or act.get("title") or f"Activity {act_idx}"
+                    act_id = str(act.get("id") or act.get("code") or f"act_{act_idx}")
+                    act_slug = act.get("slug") or act.get("code") or act_id
 
-            comp_pct = round((mod_completed / len(items)) * 100, 1) if items else 0.0
+                    raw_type = str(act.get("type") or act.get("item_type") or "").upper()
+                    if any(k in raw_type for k in ["PROBLEM", "CODE", "LAB", "CODING"]):
+                        act_type = ActivityType.CODING
+                    elif any(k in raw_type for k in ["QUIZ", "MCQ", "ASSESSMENT"]):
+                        act_type = ActivityType.QUIZ
+                    elif any(k in raw_type for k in ["THEORY", "READ", "VIDEO", "ARTICLE"]):
+                        act_type = ActivityType.THEORY
+                    else:
+                        act_type = ActivityType.UNKNOWN
+
+                    raw_status = str(act.get("status") or "").lower()
+                    is_solved = bool(act.get("is_solved") or act.get("completed") or (raw_status in ["completed", "solved", "submitted"]))
+                    is_locked = bool(act.get("is_locked") or (raw_status == "locked"))
+
+                    if is_solved:
+                        act_status = ActivityStatus.COMPLETED
+                        mod_completed += 1
+                        completed_activities += 1
+                    elif is_locked:
+                        act_status = ActivityStatus.LOCKED
+                    elif raw_status in ["attempted", "partially_solved", "in_progress"]:
+                        act_status = ActivityStatus.IN_PROGRESS
+                    else:
+                        act_status = ActivityStatus.NOT_STARTED
+
+                    total_activities += 1
+
+                    act_url = act.get("url") or ""
+                    if not act_url:
+                        base_course = f"https://www.codechef.com/learn/course/{course_slug}"
+                        if act_type == ActivityType.CODING:
+                            act_url = f"{base_course}/{mod_slug}/problems/{act_slug}"
+                        else:
+                            act_url = f"{base_course}/{mod_slug}/lesson/{act_slug}"
+
+                    activities.append(
+                        ActivitySummary(
+                            id=act_id,
+                            title=act_title,
+                            slug=act_slug,
+                            type=act_type,
+                            status=act_status,
+                            url=act_url,
+                            module_id=mod_id,
+                            language=act.get("language") or default_lang,
+                        )
+                    )
+
+            comp_pct = round((mod_completed / len(activities)) * 100, 1) if activities else 0.0
             modules.append(
                 ModuleSummary(
                     id=mod_id,

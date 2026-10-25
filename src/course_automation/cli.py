@@ -43,6 +43,12 @@ def version():
 @app.command()
 def config():
     """Display current configuration and resolved directory paths."""
+    from course_automation.browser.browser_use_bridge import BrowserUseBridge
+    from course_automation.browser.session import probe_local_cdp
+
+    cdp_active = probe_local_cdp("http://127.0.0.1:9222")
+    bu_status = BrowserUseBridge.get_status()
+
     table = Table(title="Course Automation Configuration", show_header=True)
     table.add_column("Key", style="cyan")
     table.add_column("Value", style="magenta")
@@ -50,9 +56,11 @@ def config():
     table.add_row("AI Provider", settings.ai_provider)
     table.add_row("Gemini Model", settings.gemini_model)
     table.add_row("Gemini API Key", "[SET (REDACTED)]" if settings.gemini_api_key else "[NOT SET]")
-    table.add_row("Browser Headless", str(settings.browser_headless))
+    table.add_row("Browser Backend", "Playwright (Local Native - Free)")
+    table.add_row("Local Chrome CDP (port 9222)", "[bold green]Online (Reachable)[/bold green]" if cdp_active else "[yellow]Offline (Using Isolated Profile)[/yellow]")
     table.add_row("Browser Profile Dir", str(settings.browser_user_data_dir))
-    table.add_row("Browser CDP URL", str(settings.browser_cdp_url or "None"))
+    table.add_row("Browser CDP URL", str(settings.browser_cdp_url or ("http://127.0.0.1:9222 (Auto-probe)" if cdp_active else "None")))
+    table.add_row("Browser-Use Framework", f"{bu_status['status'].title()} (Optional Agentic Backend)")
     table.add_row("Database Path", str(settings.database_path))
     table.add_row("Log Level", settings.log_level)
     table.add_row("Dry Run Default", str(settings.dry_run))

@@ -1,5 +1,6 @@
 """Browser session manager using standard Playwright with persistent context or CDP."""
 
+import urllib.request
 from pathlib import Path
 from typing import Optional
 from playwright.sync_api import Browser, BrowserContext, Page, sync_playwright
@@ -7,8 +8,18 @@ from course_automation.config import settings
 from course_automation.logger import logger
 
 
+def probe_local_cdp(url: str = "http://127.0.0.1:9222") -> bool:
+    """Check if a Chrome instance is actively listening on remote debugging port."""
+    try:
+        req = urllib.request.Request(f"{url.rstrip('/')}/json/version", headers={"User-Agent": "CourseAutomation"})
+        with urllib.request.urlopen(req, timeout=1.0) as res:
+            return res.status == 200
+    except Exception:
+        return False
+
+
 class BrowserSession:
-    """Manages an isolated Playwright browser session."""
+    """Manages Playwright browser connection via CDP or isolated persistent context."""
 
     def __init__(
         self,
@@ -16,15 +27,18 @@ class BrowserSession:
         headless: Optional[bool] = None,
         cdp_url: Optional[str] = None,
         timeout_ms: Optional[int] = None,
+        auto_probe_cdp: bool = True,
     ):
         self.user_data_dir = (user_data_dir or settings.browser_user_data_dir).expanduser().resolve()
         self.headless = headless if headless is not None else settings.browser_headless
         self.cdp_url = cdp_url or settings.browser_cdp_url
         self.timeout_ms = timeout_ms or settings.browser_timeout_ms
+        self.auto_probe_cdp = auto_probe_cdp
 
         self._playwright = None
         self._browser: Optional[Browser] = None
         self._context: Optional[BrowserContext] = None
+        self._is_cdp: bool = False
 
     def __enter__(self) -> "BrowserSession":
         self.start()
@@ -38,14 +52,24 @@ class BrowserSession:
         logger.info("Initializing Playwright browser session...")
         self._playwright = sync_playwright().start()
 
-        if self.cdp_url:
-            logger.info(f"Connecting to remote browser over CDP at {self.cdp_url}...")
-            self._browser = self._playwright.chromium.connect_over_cdp(self.cdp_url)
-            if self._browser.contexts:
-                self._context = self._browser.contexts[0]
-            else:
-                self._context = self._browser.new_context()
-        else:
+        # Determine if we should connect over CDP
+        target_cdp = self.cdp_url
+        if not target_cdp and self.auto_probe_cdp and probe_local_cdp("http://127.0.0.1:9222"):
+            target_cdp = "http://127.0.0.1:9222"
+            logger.info("Auto-detected active Chrome instance listening on port 9222.")
+
+        if target_cdp:
+            logger.info(f"Connecting to browser over CDP at {target_cdp}...")
+            try:
+                self._browser = self._playwright.chromium.connect_over_cdp(target_cdp)
+                self._context = self._browser.contexts[0] if self._browser.contexts else self._browser.new_context()
+                self._is_cdp = True
+                logger.info(f"Connected over CDP successfully ({len(self._context.pages)} open tab(s)).")
+            except Exception as e:
+                logger.warning(f"Failed to connect to CDP at {target_cdp}: {e}. Falling back to persistent context.")
+                target_cdp = None
+
+        if not target_cdp:
             self.user_data_dir.mkdir(parents=True, exist_ok=True)
             logger.info(f"Launching persistent browser context at {self.user_data_dir} (headless={self.headless})...")
             self._context = self._playwright.chromium.launch_persistent_context(
@@ -59,25 +83,23 @@ class BrowserSession:
                 ],
                 timeout=self.timeout_ms,
             )
+            self._is_cdp = False
 
         self._context.set_default_timeout(self.timeout_ms)
 
     def close(self) -> None:
-        """Safely close context, browser, and playwright instance."""
+        """Safely disconnect or close browser session."""
         try:
-            if self._context:
+            if self._browser and self._is_cdp:
+                # For CDP, disconnect client without killing user's browser
+                self._browser.close()
+            elif self._context:
+                # For standalone persistent context, close it cleanly
                 self._context.close()
         except Exception as e:
-            logger.debug(f"Context close error: {e}")
+            logger.debug(f"Browser cleanup error: {e}")
         finally:
             self._context = None
-
-        try:
-            if self._browser:
-                self._browser.close()
-        except Exception as e:
-            logger.debug(f"Browser close error: {e}")
-        finally:
             self._browser = None
 
         try:
@@ -88,7 +110,7 @@ class BrowserSession:
         finally:
             self._playwright = None
 
-        logger.info("Browser session closed cleanly.")
+        logger.info("Browser session disconnected cleanly.")
 
     @property
     def context(self) -> BrowserContext:
@@ -96,6 +118,11 @@ class BrowserSession:
         if not self._context:
             raise RuntimeError("BrowserSession has not been started. Use 'with BrowserSession():'")
         return self._context
+
+    @property
+    def is_cdp(self) -> bool:
+        """Return True if session is connected over Chrome DevTools Protocol."""
+        return self._is_cdp
 
     def get_or_create_page(self) -> Page:
         """Retrieve existing open page or create a new one."""
