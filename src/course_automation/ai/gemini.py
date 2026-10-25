@@ -11,7 +11,7 @@ from course_automation.logger import logger
 class GeminiProvider(BaseAIProvider):
     """AI provider using Google Gemini models via google-genai SDK."""
 
-    def __init__(self, api_key: Optional[str] = None, model: str = "gemini-2.5-flash"):
+    def __init__(self, api_key: Optional[str] = None, model: str = "gemini-flash-lite-latest"):
         self.api_key = api_key
         self.model_name = model
         self._client = None

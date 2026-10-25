@@ -1,280 +1,237 @@
 # Course Automation
 
-A standalone, modular, open-source Python application for automated course inspection, progress tracking, theory concept reading, and exercise assistance on web learning platforms (featuring full support for CodeChef Learn).
+A lightweight, standalone, open-source tool for inspecting course progress, reading theory concepts, and assisting with exercises on CodeChef Learn.
 
-Built to be **100% portable, secure, and vendor-independent** — runs entirely on your local machine without requiring proprietary IDE plugins, cloud daemons, or paid subscriptions.
-
----
-
-## Key Highlights
-
-- **Universal Course Compatibility:** Works with **any** CodeChef Learn course URL (DBMS, OOPS, Data Structures & Algorithms, Python, C, Java, etc.) — zero hard-coded course IDs or fixed structures.
-- **Dynamic Content & Theory Concept Reading:** Smoothly scrolls through theory lessons to trigger lazily loaded dynamic content, code blocks, and MathJax widgets, locating and clicking enabled **Next** or **Continue** buttons.
-- **Multiple-Choice Question (MCQ) Automation:**
-  - Extracts full question statements (combining problem prompts and MCQ instructions) and candidate radio options with DOM locators.
-  - Generates structured reasoning and candidate selection via AI provider.
-  - **Human Review Safeguard:** Halts and prompts for user terminal approval whenever confidence is below 85% instead of guessing.
-  - Verifies visual checked state (`is_checked=True`), clicks submit, and parses platform feedback banners (`ACCEPTED` vs `WRONG_ANSWER`).
-  - Seamlessly falls back to theory reading mode for concept pages that do not contain radio inputs.
-- **Multi-Language Coding Labs:** Automates Monaco and Ace code editors across **C++, Java, C, and Python** using base64 buffer injection to prevent quotation or newline corruption.
-- **Multi-Activity Traversal & Checkpointing:** Iterates sequentially through course activities using SQLite checkpointing so already-completed lessons are never redundantly reprocessed.
-- **Safety by Default:** Full dry-run mode (`--dry-run`) inspects pages and reasons about solutions without submitting anything or advancing lessons. Consequential actions require explicit user approval.
-- **Zero Credential Leaking:** Automatic regex sanitization scrubs API keys, authorization tokens, and personal secrets from all terminal logs and AI prompts.
+Runs completely on your local machine using standard Python and Playwright. No browser extensions, cloud daemons, or paid subscriptions required.
 
 ---
 
-## Architecture Overview
+## Prerequisites
 
-```
-course-automation/
-├── src/course_automation/
-│   ├── cli.py                     # Typer CLI commands (inspect, solve, status, auth, config)
-│   ├── config.py                  # Pydantic Settings configuration from environment and .env
-│   ├── logger.py                  # Sanitized logging with regex credential redaction
-│   ├── safety.py                  # Confirmation gates for live or consequential actions
-│   ├── browser/
-│   │   ├── session.py             # Playwright persistent context & CDP connector
-│   │   ├── auth.py                # DOM-based login state detection
-│   │   ├── active_session.py      # Active browser tab detection
-│   │   └── browser_use_bridge.py  # Bridge for Browser Use agent automation
-│   ├── ai/
-│   │   ├── base.py                # BaseAIProvider interface and MCQReasoningResult
-│   │   ├── sanitizer.py           # Credential scrubber
-│   │   └── gemini.py              # Optional Google Gemini integration
-│   ├── sites/
-│   │   ├── base.py                # Abstract BaseSiteAdapter
-│   │   └── codechef/
-│   │       ├── adapter.py         # CodeChef site adapter
-│   │       ├── syllabus.py        # Generic syllabus API & DOM fallback parser
-│   │       ├── editor.py          # Monaco and Ace code editor controller
-│   │       ├── verdicts.py        # Submission verdict polling state machine
-│   │       ├── navigator.py       # Sequential multi-lesson traversal controller
-│   │       └── handlers/          # Modular activity handlers
-│   │           ├── base.py        # BaseActivityHandler
-│   │           ├── coding.py      # Coding problems & labs
-│   │           ├── quiz.py        # Multiple-choice quizzes
-│   │           ├── lesson.py      # Theory reading concepts
-│   │           └── locked.py      # Locked & unsupported assessments
-│   └── storage/
-│       ├── models.py              # Pydantic schemas (courses, modules, activities)
-│       └── db.py                  # SQLite database manager (~/.course_automation/)
-├── tests/                         # Automated pytest suite (60 passing tests)
-├── docs/                          # Architecture and development guides
-└── pyproject.toml                 # Package definition and CLI entrypoint
-```
+- **Python 3.10+** (Python 3.10, 3.11, or 3.12)
+- **Git**
 
 ---
 
-## System Requirements
+## Quick Start (Copy-Paste Installation)
 
-- **Operating System:** macOS (Apple Silicon or Intel), Linux (Ubuntu, Debian, Fedora, Arch), or Windows 10/11 (WSL2 recommended).
-- **Python:** 3.10, 3.11, or 3.12.
-- **Browser:** Chromium (automatically installed via Playwright).
-- **RAM:** Minimum 2 GB (4 GB recommended for browser automation).
+### macOS / Linux
 
----
-
-## Installation Guide
-
-### 1. Clone the Repository
 ```bash
+# 1. Clone the repository
 git clone https://github.com/your-username/course-automation.git
 cd course-automation
-```
 
-### 2. Set Up Virtual Environment
-```bash
+# 2. Create and activate a virtual environment
 python3 -m venv .venv
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-```
+source .venv/bin/activate
 
-### 3. Install Dependencies
-```bash
-python -m pip install --upgrade pip
+# 3. Install dependencies and the CLI tool
+pip install --upgrade pip
+pip install -e .
 
-# Install package in editable mode with development & AI extras:
-pip install -e ".[dev,ai]"
-
-# Install Chromium browser binary:
+# 4. Install the Chromium browser binary
 playwright install chromium
+
+# 5. Verify installation
+course-automation --help
+```
+
+### Windows (PowerShell)
+
+```powershell
+# 1. Clone the repository
+git clone https://github.com/your-username/course-automation.git
+cd course-automation
+
+# 2. Create and activate a virtual environment
+python -m venv .venv
+.venv\Scripts\Activate.ps1
+
+# 3. Install dependencies and the CLI tool
+python -m pip install --upgrade pip
+pip install -e .
+
+# 4. Install the Chromium browser binary
+playwright install chromium
+
+# 5. Verify installation
+course-automation --help
 ```
 
 ---
 
-## Configuration
+## First-Run Walkthrough
 
-Copy the template configuration to create your local `.env` file:
-```bash
-cp .env.example .env
-```
+Follow these 4 simple steps to get started:
 
-### Configuration Options
-
-| Environment Variable | Default Value | Description |
-|---|---|---|
-| `AI_PROVIDER` | `none` | Active AI provider (`gemini` or `none`). Inspection and theory reading work 100% without AI. |
-| `GEMINI_API_KEY` | None | API key from Google AI Studio (supports `GEMINI_API_KEY` or `GOOGLE_API_KEY`). |
-| `GEMINI_MODEL` | `gemini-flash-lite-latest` | Gemini model identifier (e.g. `gemini-flash-lite-latest`, `gemini-flash-latest`). |
-| `BROWSER_HEADLESS` | `false` | Run browser in headless mode (`true`/`false`). Recommended: `false` for transparency. |
-| `BROWSER_USER_DATA_DIR` | `~/.course_automation/browser_profile` | Directory for persistent browser session and cookies. |
-| `BROWSER_CDP_URL` | None | Optional CDP URL to attach to an existing Chrome browser (e.g., `http://127.0.0.1:9222`). |
-| `DATABASE_PATH` | `~/.course_automation/progress.db` | Local SQLite database for syllabus caching and checkpointing. |
-| `DRY_RUN` | `false` | When true, simulate actions without submitting or advancing. |
-| `LOG_LEVEL` | `INFO` | Console log verbosity (`DEBUG`, `INFO`, `WARNING`, `ERROR`). |
-
----
-
-## AI Provider Setup & Costs
-
-- **AI is completely optional:** You can inspect syllabi, check progress, offline query databases, and read theory lessons with `AI_PROVIDER=none`.
-- **Google Gemini:** If enabled, you need an API key from [Google AI Studio](https://aistudio.google.com/app/apikey).
-  - The default model is `gemini-flash-lite-latest`, which qualifies for Google's generous free tier (no credit card required for standard rate limits).
-  - All prompts are strictly scrubbed of API keys, authentication tokens, and personal secrets before transmission.
-
----
-
-## Usage Guide & Realistic Examples
-
-### 1. One-Time Authentication
-Launch a persistent headful browser window to log in to your account. Your authenticated session is stored securely in `~/.course_automation/browser_profile` and persists across CLI runs:
+### Step 1: One-Time Login (Authentication)
+Launch a clean browser window to log in to your CodeChef account:
 ```bash
 course-automation auth
 ```
+Log in manually in the browser window. Your session cookies are stored locally and encrypted in `~/.course_automation/browser_profile` so you do not need to log in again.
 
-### 2. Inspecting Course Progress
-
-**Auto-Detect Active Tab in Browser:**
-If you already have a CodeChef course open in your browser, inspect it without specifying a URL:
+### Step 2: Inspect Any Course
+Inspect the full syllabus, module breakdown, and completion status for any course:
 ```bash
-course-automation inspect
-```
-
-**Inspect by Explicit Course URL:**
-```bash
-# Database Management Systems (DBMS)
-course-automation inspect https://www.codechef.com/learn/course/cu-dbms-sem3-2026-c2
-
-# Object-Oriented Programming (OOPS)
 course-automation inspect https://www.codechef.com/learn/course/cu-oops-sem3-2026-c2
-
-# Advanced Data Structures & Algorithms (ADSA)
-course-automation inspect https://www.codechef.com/learn/course/cu-adsa-sem3-2026-c2
 ```
+*Tip: If you already have a course open in your browser, simply run `course-automation inspect` without a URL to auto-detect the active tab.*
 
-**Inspection Flags:**
-- `--incomplete-only`: Filter out completed lessons to focus on remaining tasks.
-- `--select-module`: Interactively choose which unit or module to inspect.
-- `--json`: Output raw structured JSON for integration with other tools.
-
-### 3. Querying Progress Offline (SQLite)
-Query course syllabi and completion status from the local database without opening a browser:
+### Step 3: Run a Safe Simulation (Dry-Run Mode)
+Preview what the tool would do without submitting answers or changing progress:
 ```bash
-# List all tracked courses and overall progress percentages
+course-automation solve https://www.codechef.com/learn/course/cu-oops-sem3-2026-c2 --dry-run
+```
+In dry-run mode, the tool inspects the page, scrolls through reading content, extracts questions, and verifies controls, but **never clicks submit buttons or modifies course progress**.
+
+### Step 4: Check Saved Progress Offline
+View cached progress anytime from the local SQLite database without opening a browser:
+```bash
 course-automation status
-
-# View detailed unit-by-unit breakdown for a specific course
-course-automation status cu-dbms-sem3-2026-c2
-```
-
-### 4. Processing Activities (Theory, Quizzes & Coding)
-
-**Safe Simulation Mode (Dry-Run):**
-Inspect pages, scroll through reading content, extract MCQ options, and reason about answers without clicking or submitting:
-```bash
-# Safe simulation on theory and MCQs (limit to 5 activities)
-course-automation solve https://www.codechef.com/learn/course/cu-dbms-sem3-2026-c2 --theory-only --max-activities 5 --dry-run
-
-# Dry-run on a single specific quiz or lesson
-course-automation solve https://www.codechef.com/learn/course/cu-dbms-sem3-2026-c2 --activity CLGDBMSP08 --dry-run
-```
-
-**Live Traversal with Interactive Confirmation:**
-Prompts you for approval before submitting any quiz answer or code solution:
-```bash
-course-automation solve https://www.codechef.com/learn/course/cu-dbms-sem3-2026-c2 --theory-only --max-activities 5
-```
-
-**Automated Progression (Bypassing Prompts):**
-Bypasses high-level activity confirmation prompts while still enforcing the low-confidence safeguard:
-```bash
-course-automation solve https://www.codechef.com/learn/course/cu-dbms-sem3-2026-c2 --theory-only --max-activities 10 --auto-approve
 ```
 
 ---
 
-## Security & Privacy Safeguards
+## Configuration & Optional AI
 
-1. **Zero Secret Exposure:** Built-in regex filters redact Google API keys, Bearer tokens, and authorization headers from all logs, console outputs, and AI prompts.
-2. **Local Session Isolation:** Cookies, storage, and database files remain strictly inside your local user directory (`~/.course_automation/`). They are never committed, uploaded, or transmitted.
-3. **Safety Confirmation Gates:** Consequential actions require explicit terminal confirmation unless `--auto-approve` is passed.
-4. **Non-Mutating Dry-Run:** In dry-run mode (`--dry-run`), button clicking and form submissions are completely disabled in the DOM.
+The tool works **100% without an AI provider** for course inspection, syllabus discovery, and theory reading.
+
+If you want AI assistance for reasoning through multiple-choice questions (MCQs) or starter code:
+
+1. Copy the template configuration file:
+   ```bash
+   cp .env.example .env
+   ```
+2. Install optional AI dependencies:
+   ```bash
+   pip install -e ".[ai]"
+   ```
+3. Open `.env` and add your Google Gemini API key:
+   ```env
+   AI_PROVIDER=gemini
+   GEMINI_API_KEY=your_google_api_key_here
+   GEMINI_MODEL=gemini-flash-lite-latest
+   ```
+   *(You can obtain a free API key from [Google AI Studio](https://aistudio.google.com/app/apikey). The `gemini-flash-lite-latest` model operates under Google's generous free tier with zero subscription cost).*
+
+### Configuration Options
+
+| Setting in `.env` | Default | Description |
+|---|---|---|
+| `AI_PROVIDER` | `none` | Set to `gemini` for AI reasoning, or `none` for purely manual/dry-run use. |
+| `GEMINI_API_KEY` | None | Your Google AI Studio API key (supports `GEMINI_API_KEY` or `GOOGLE_API_KEY`). |
+| `GEMINI_MODEL` | `gemini-flash-lite-latest` | Model identifier for reasoning. |
+| `BROWSER_HEADLESS` | `false` | Set to `true` to run without a visible browser window. |
+| `BROWSER_USER_DATA_DIR` | `~/.course_automation/browser_profile` | Directory where your authenticated session is saved. |
+| `BROWSER_CDP_URL` | None | Optional CDP endpoint (e.g., `http://127.0.0.1:9222`) if attaching to an existing Chrome. |
+| `DATABASE_PATH` | `~/.course_automation/progress.db` | Path to local SQLite progress database. |
+| `DRY_RUN` | `false` | Default dry-run mode for CLI runs. |
+| `LOG_LEVEL` | `INFO` | Console logging verbosity (`DEBUG`, `INFO`, `WARNING`, `ERROR`). |
 
 ---
 
-## Known Limitations & Unsupported Scenarios
+## Example Commands
 
-- **Locked Assessments:** Activities locked by platform prerequisites or scheduling are recognized honestly as `LOCKED_SKIPPED` and will not be bypassed.
-- **Proctored / External Exams:** Secure university tests or exams with webcam monitoring or lockdown browsers are unsupported.
-- **CAPTCHAs:** In the rare event of a CAPTCHA challenge, human manual completion in the browser window is required.
-- **Non-CodeChef Platforms:** While the codebase is architected with an abstract `BaseSiteAdapter`, only CodeChef Learn is currently implemented.
+```bash
+# 1. Inspect any course (shows completed, in-progress, and incomplete activities)
+course-automation inspect https://www.codechef.com/learn/course/cu-adsa-sem3-2026-c2
+
+# 2. Inspect only incomplete activities
+course-automation inspect https://www.codechef.com/learn/course/cu-adsa-sem3-2026-c2 --incomplete-only
+
+# 3. Interactively select a specific module to inspect
+course-automation inspect https://www.codechef.com/learn/course/cu-adsa-sem3-2026-c2 --select-module
+
+# 4. Safe dry-run on theory reading and quizzes (limit to 5 activities)
+course-automation solve https://www.codechef.com/learn/course/cu-adsa-sem3-2026-c2 --theory-only --max-activities 5 --dry-run
+
+# 5. Target a specific problem or quiz activity
+course-automation solve https://www.codechef.com/learn/course/cu-adsa-sem3-2026-c2 --activity INSSRTASCD --dry-run
+
+# 6. Live assisted progression (prompts for terminal confirmation before each submission)
+course-automation solve https://www.codechef.com/learn/course/cu-adsa-sem3-2026-c2 --theory-only --max-activities 5
+
+# 7. View offline database summary of all tracked courses
+course-automation status
+```
+
+---
+
+## Features & Supported Activities
+
+- **Theory & Concept Reading:** Smoothly scrolls through reading lessons to trigger dynamic MathJax rendering and code blocks, detects accessible enabled `Next` / `Continue` buttons, and confirms page advancement.
+- **Multiple-Choice Questions (MCQs):** Extracts complete prompt statements and options, applies structured reasoning, pauses for human confirmation if confidence is below 85%, and verifies the visual checked state and platform feedback banner.
+- **Multi-Language Coding Labs:** Handles Monaco and Ace code editors across **C++, Java, C, and Python** using base64 buffer injection to prevent quotation or newline corruption.
+- **Safety by Default:**
+  - Interactive terminal confirmation required before any submission unless `--auto-approve` is explicitly passed.
+  - Built-in regex filters redact API keys, Bearer tokens, and secrets from all logs and prompts.
+  - Browser profile and database remain strictly local inside `~/.course_automation/`.
 
 ---
 
 ## Troubleshooting Guide
 
-### 1. Browser Error: `Executable doesn't exist`
-**Cause:** Playwright browser binaries are not installed.
-**Fix:**
+### 1. Browser Error: `Executable doesn't exist at ...`
+**Fix:** Install the Chromium browser binary:
 ```bash
 playwright install chromium
 ```
 
 ### 2. Session Expired or `403 Not Authorised`
-**Cause:** CodeChef session cookie has expired or was logged out.
-**Fix:** Run the authentication helper to refresh your session:
+**Fix:** Your session cookies have expired. Re-authenticate:
 ```bash
 course-automation auth
 ```
 
-### 3. Model Error: `404 NOT_FOUND: models/gemini-2.5-flash is no longer available`
-**Cause:** Google AI Studio deprecated older model identifiers.
-**Fix:** Update `GEMINI_MODEL` in your `.env` file:
+### 3. Model Error: `404 NOT_FOUND: models/... is no longer available`
+**Fix:** Update `GEMINI_MODEL` in your `.env` file to the latest active model:
 ```env
 GEMINI_MODEL=gemini-flash-lite-latest
 ```
 
 ### 4. CDP Connection: `Protocol error (Browser.setDownloadBehavior)`
-**Cause:** Chrome was started on port 9222 without an open tab or in an incompatible context state.
-**Fix:** Leave `BROWSER_CDP_URL=` empty in `.env`. The application will launch an isolated persistent browser profile automatically.
+**Fix:** Leave `BROWSER_CDP_URL=` empty in your `.env` file. The tool will automatically use its standalone persistent browser profile.
+
+### 5. Permission Denied on Windows PowerShell Execution Policy
+**Fix:** Allow local script execution for the current session:
+```powershell
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process
+.venv\Scripts\Activate.ps1
+```
+
+---
+
+## Known Limitations
+
+- **Locked Activities:** Activities locked by prerequisite gates or scheduling are recognized honestly as `LOCKED_SKIPPED` and are not bypassed.
+- **Proctored Exams:** Secure exams with lockdown browsers or webcam proctoring are completely unsupported.
+- **CAPTCHAs:** Rare CAPTCHA challenges require manual completion in the headful browser window.
+- **Platforms:** Only CodeChef Learn is currently implemented.
 
 ---
 
 ## Running Automated Tests
 
-The test suite runs entirely offline using synthetic HTML fixtures and mocked network responses without contacting external servers or consuming account quotas:
+All tests run completely offline using mocked DOM trees and synthetic fixtures without contacting live servers or touching user courses:
 
 ```bash
-# Run all 60 tests
-pytest -v
+# Install test dependencies
+pip install -e ".[dev]"
 
-# Run with test failure details
-pytest -v --tb=short
+# Run all 65 automated tests
+pytest -v
 ```
 
 ---
 
-## Contributing
-
-We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for development setup instructions, architecture guides, and coding guidelines. All participants are expected to adhere to our [Code of Conduct](CODE_OF_CONDUCT.md).
-
----
-
-## Disclaimer & Compliance Notice
+## Disclaimer & Compliance
 
 > [!IMPORTANT]
-> **Educational & Personal Use Only:** Course Automation is an open-source development tool intended solely for personal study management, progress inspection, and assisting with coursework navigation.
+> **Educational and Personal Use Only:** Course Automation is an independent open-source tool designed solely for personal study tracking and coursework assistance.
 >
-> Users are strictly responsible for complying with CodeChef's Terms of Service, their academic institution's Honor Code, and all applicable academic integrity policies. The maintainers and contributors do not endorse academic dishonesty and assume no liability for misuse, account penalties, or honor code violations.
+> Users are solely responsible for ensuring compliance with CodeChef's Terms of Service, their academic institution's Honor Code, and all applicable academic integrity policies. The maintainers assume no liability for misuse, account penalties, or policy violations.
 
 ---
 
