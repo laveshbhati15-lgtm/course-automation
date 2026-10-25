@@ -21,7 +21,7 @@ All contributors and participants are expected to uphold our [Code of Conduct](C
 
 ### 1. Fork & Clone
 ```bash
-git clone https://github.com/<your-username>/course-automation.git
+git clone https://github.com/<laveshbhati99-netizen>/course-automation.git
 cd course-automation
 ```
 

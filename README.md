@@ -19,7 +19,7 @@ Runs completely on your local machine using standard Python and Playwright. No b
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/your-username/course-automation.git
+git clone https://github.com/laveshbhati99-netizen/course-automation.git
 cd course-automation
 
 # 2. Create and activate a virtual environment
@@ -41,7 +41,7 @@ course-automation --help
 
 ```powershell
 # 1. Clone the repository
-git clone https://github.com/your-username/course-automation.git
+git clone https://github.com/laveshbhati99-netizen/course-automation.git
 cd course-automation
 
 # 2. Create and activate a virtual environment
