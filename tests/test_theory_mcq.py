@@ -281,10 +281,10 @@ def test_navigator_sequential_run(tmp_path):
     act3 = ActivitySummary(id="L1", title="Exam", slug="l1", type=ActivityType.QUIZ, status=ActivityStatus.LOCKED)
 
     mock_summary = CourseSummary(
-        id="cu-dbms",
-        slug="cu-dbms",
-        title="Database Management Systems",
-        url="https://codechef.com/learn/course/cu-dbms",
+        id="synthetic-course",
+        slug="synthetic-course",
+        title="Synthetic Theory Course",
+        url="https://codechef.com/learn/course/synthetic-course",
         modules=[
             ModuleSummary(
                 id="mod_1",
@@ -315,7 +315,7 @@ def test_navigator_sequential_run(tmp_path):
         max_activities=5,
     )
 
-    report = navigator.run(page, "https://codechef.com/learn/course/cu-dbms")
+    report = navigator.run(page, "https://codechef.com/learn/course/synthetic-course")
     assert report.total_processed == 3
     assert report.completed_count == 2
     assert report.skipped_count == 1
@@ -333,10 +333,10 @@ def test_navigator_dry_run(tmp_path):
 
     act1 = ActivitySummary(id="T1", title="DBMS Intro", slug="t1", type="THEORY", status="NOT_STARTED")
     mock_summary = CourseSummary(
-        id="cu-dbms",
-        slug="cu-dbms",
-        title="Database Management Systems",
-        url="https://codechef.com/learn/course/cu-dbms",
+        id="synthetic-course",
+        slug="synthetic-course",
+        title="Synthetic Theory Course",
+        url="https://codechef.com/learn/course/synthetic-course",
         modules=[
             ModuleSummary(
                 id="mod_1",
@@ -364,7 +364,7 @@ def test_navigator_dry_run(tmp_path):
         max_activities=1,
     )
 
-    report = navigator.run(page, "https://codechef.com/learn/course/cu-dbms")
+    report = navigator.run(page, "https://codechef.com/learn/course/synthetic-course")
     assert report.total_processed == 1
     assert report.completed_count == 1
     assert report.steps[0].verdict == "DRY_RUN_PASSED"

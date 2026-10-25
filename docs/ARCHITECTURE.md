@@ -40,3 +40,12 @@ Course Automation uses a clean, layered architecture separating CLI entrypoints,
 
 5. **`DatabaseManager` (`src/course_automation/storage/db.py`)**
    Provides ACID-compliant SQLite storage for courses, modules, activities, submissions, and key-value checkpoints.
+
+6. **`TheoryCourseNavigator` (`src/course_automation/sites/codechef/navigator.py`)**
+   Orchestrates sequential multi-lesson traversals across a course curriculum. Coordinates candidate activity filtering (`--theory-only`, `--coding-only`), safety confirmation gates, and SQLite progress persistence.
+
+7. **`TheoryLessonActivityHandler` (`src/course_automation/sites/codechef/handlers/lesson.py`)**
+   Automates reading concept lessons: smooth scrolling to trigger MathJax and dynamic assets, accessible navigation button discovery, and live advancement verification.
+
+8. **`QuizActivityHandler` (`src/course_automation/sites/codechef/handlers/quiz.py`)**
+   Automates multiple-choice questions: extracts full prompt statements and radio options, performs structured AI reasoning, halts for human review if confidence is below 85%, and verifies visual checked state and platform feedback banners.

@@ -39,8 +39,10 @@ env/
 htmlcov/
 .tox/
 .nox/
+.mypy_cache/
+.ruff_cache/
 
-# Browser profiles and cached sessions (CRITICAL: NEVER COMMIT BROWSER PROFILES)
+# Browser profiles, sessions, and artifacts (CRITICAL: NEVER COMMIT BROWSER SESSIONS)
 data/
 browser_profile/
 data/browser_profile/
@@ -48,6 +50,11 @@ data/browser_profile/
 cookies.json
 auth.json
 Default/
+.course_automation/
+.tempmediaStorage/
+*.har
+recordings/
+screenshots/
 
 # Databases & runtime storage
 *.db
@@ -55,17 +62,17 @@ Default/
 *.sqlite3
 storage/*.db
 
-# Logs and screenshots
+# Logs
 *.log
 logs/
-screenshots/
-recordings/
 
 # Environment and secrets
 .env
 .env.local
+.env.*.local
 *.pem
 *.key
+*.crt
 
 # IDE and OS
 .DS_Store
@@ -73,3 +80,4 @@ recordings/
 .vscode/
 *.swp
 *.swo
+*~
