@@ -191,11 +191,15 @@
         <h2>Supported Operating Systems & Python Versions</h2>
 
         <h3>Python Compatibility</h3>
-        <p>The project requires Python 3.10 or newer (modern union type syntax <code>A | B</code> is used throughout the codebase):</p>
+        <div class="callout callout-warning">
+          <div class="callout-title">Strict Python >=3.10 Requirement</div>
+          <p>This project strictly requires <strong>Python 3.10 or newer</strong>. We strongly recommend <strong>Python 3.12</strong> for all new users. Older Python versions (such as the default macOS Command Line Tools Python 3.9.6) are not supported and will fail during installation.</p>
+        </div>
         <ul style="color: var(--text-muted); margin-left: 1.5rem; margin-bottom: 1.5rem; line-height: 1.8;">
-          <li><strong>Python 3.10, 3.11, 3.12:</strong> Supported and tested.</li>
+          <li><strong>Python 3.12:</strong> Recommended for all users.</li>
+          <li><strong>Python 3.10, 3.11:</strong> Fully supported.</li>
           <li><strong>Python 3.14:</strong> Tested and verified in local clean test environments.</li>
-          <li><strong>Python 3.9 and older:</strong> Not supported.</li>
+          <li><strong>Python 3.9 and older:</strong> Not supported (fails with <code>requires-python >=3.10</code>).</li>
         </ul>
 
         <h3>Operating System Matrix</h3>
@@ -248,13 +252,19 @@
 
           <!-- macOS Tab Content -->
           <div class="tab-content active" id="tab-macos">
-            <p><strong>Step 1: Install Prerequisites</strong> (Homebrew)</p>
+            <div class="callout callout-info" style="margin-top: 0;">
+              <div class="callout-title">Check Version First (Avoid macOS Default Python 3.9.6)</div>
+              <p>Fresh Macs often provide Xcode Command Line Tools Python 3.9.6, which will fail. Check your version with <code>python3 --version</code>. If older than 3.10, install Python 3.12 via Homebrew.</p>
+            </div>
+
+            <p><strong>Step 1: Install Python 3.12 & Git (via Homebrew)</strong></p>
             <div class="code-block">
               <div class="code-header">
                 <span>bash</span>
                 <button class="copy-btn">Copy</button>
               </div>
-              <pre><code>brew install python git</code></pre>
+              <pre><code>brew install python@3.12 git
+python3.12 --version</code></pre>
             </div>
 
             <p><strong>Step 2: Clone & Enter Repository</strong></p>
@@ -267,14 +277,26 @@
 cd course-automation</code></pre>
             </div>
 
-            <p><strong>Step 3: Create & Activate Virtual Environment</strong></p>
+            <p><strong>Step 3: Create & Activate Virtual Environment using Python 3.12</strong></p>
             <div class="code-block">
               <div class="code-header">
                 <span>bash</span>
                 <button class="copy-btn">Copy</button>
               </div>
-              <pre><code>python3 -m venv .venv
+              <pre><code>python3.12 -m venv .venv
+source .venv/bin/activate
+python --version</code></pre>
+            </div>
+
+            <div class="callout callout-warning">
+              <div class="callout-title">Fixing an Existing Virtual Environment Created with Python 3.9</div>
+              <p>If you previously created <code>.venv</code> with Python 3.9, delete and recreate it cleanly (project files are untouched):</p>
+              <div class="code-block">
+                <div class="code-header"><span>bash</span><button class="copy-btn">Copy</button></div>
+                <pre><code>rm -rf .venv
+python3.12 -m venv .venv
 source .venv/bin/activate</code></pre>
+              </div>
             </div>
 
             <p><strong>Step 4: Upgrade Pip & Install Project</strong></p>
@@ -283,7 +305,7 @@ source .venv/bin/activate</code></pre>
                 <span>bash</span>
                 <button class="copy-btn">Copy</button>
               </div>
-              <pre><code>python3 -m pip install --upgrade pip
+              <pre><code>python3.12 -m pip install --upgrade pip
 pip install -e .</code></pre>
             </div>
 
@@ -310,8 +332,8 @@ course-automation config</code></pre>
           <!-- Windows Tab Content -->
           <div class="tab-content" id="tab-windows">
             <div class="callout callout-info">
-              <div class="callout-title">Windows Prerequisites</div>
-              <p>Install <strong>Python 3.10-3.12</strong> from <a href="https://www.python.org/downloads/" target="_blank" rel="noopener noreferrer" style="color: var(--accent-cyan);">python.org</a> (Ensure <strong>"Add python.exe to PATH"</strong> is checked) and <strong>Git for Windows</strong> from <a href="https://git-scm.com/download/win" target="_blank" rel="noopener noreferrer" style="color: var(--accent-cyan);">git-scm.com</a>.</p>
+              <div class="callout-title">Windows Prerequisites (Recommend Python 3.12)</div>
+              <p>Install <strong>Python 3.12</strong> from <a href="https://www.python.org/downloads/" target="_blank" rel="noopener noreferrer" style="color: var(--accent-cyan);">python.org</a> (Ensure <strong>"Add python.exe to PATH"</strong> is checked) and <strong>Git for Windows</strong> from <a href="https://git-scm.com/download/win" target="_blank" rel="noopener noreferrer" style="color: var(--accent-cyan);">git-scm.com</a>. Verify with <code>python --version</code>.</p>
             </div>
 
             <p><strong>Step 1: Clone Repository in PowerShell</strong></p>
@@ -332,6 +354,7 @@ cd course-automation</code></pre>
               </div>
               <pre><code>python -m venv .venv</code></pre>
             </div>
+            <p><em>(If you have multiple Python versions, use: <code>py -3.12 -m venv .venv</code>)</em></p>
 
             <p><strong>Step 3: Activate Safely (Bypassing Script Restrictions for this Session)</strong></p>
             <div class="code-block">
@@ -635,6 +658,32 @@ GEMINI_MODEL=gemini-flash-lite-latest</code></pre>
               <div class="code-block">
                 <div class="code-header"><span>env</span><button class="copy-btn">Copy</button></div>
                 <pre><code>GEMINI_MODEL=gemini-flash-lite-latest</code></pre>
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item">
+            <button class="accordion-trigger">
+              <span>7. macOS: Python 3.9 Error during <code>pip install -e .</code></span>
+              <span class="accordion-icon">▼</span>
+            </button>
+            <div class="accordion-content">
+              <p><strong>Symptom:</strong> <code>ERROR: Package 'course-automation' requires a different Python: 3.9.6 not in '>=3.10'</code></p>
+              <p><strong>Cause:</strong> macOS default Xcode Command Line Tools provides Python 3.9.6. Additionally, an existing <code>.venv</code> folder created with Python 3.9 remains locked to 3.9 even after installing Python 3.12.</p>
+              <p><strong>Solution:</strong></p>
+              <div class="code-block">
+                <div class="code-header"><span>bash</span><button class="copy-btn">Copy</button></div>
+                <pre><code># 1. Install Python 3.12
+brew install python@3.12
+
+# 2. Delete outdated virtual environment
+rm -rf .venv
+
+# 3. Recreate explicitly with Python 3.12
+python3.12 -m venv .venv
+source .venv/bin/activate
+python3.12 -m pip install --upgrade pip
+pip install -e .</code></pre>
               </div>
             </div>
           </div>

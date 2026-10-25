@@ -55,11 +55,16 @@ Course Automation provides an accessible command-line interface to:
 
 ## Supported Operating Systems & Python Versions
 
+> [!IMPORTANT]
+> **Strict Python Requirement:**
+> Course Automation strictly requires **Python 3.10 or newer** (`requires-python = ">=3.10"` in `pyproject.toml`).
+> We strongly recommend **Python 3.12** for all new users. Older Python versions (such as macOS default Python 3.9.6) are **not supported** and will fail during installation.
+
 ### Supported Python Versions
-- **Python 3.10**
+- **Python 3.12** *(Recommended for all users)*
 - **Python 3.11**
-- **Python 3.12** *(Recommended)*
-- *(Python 3.14 has also been verified in clean local test environments; Python 3.9 and below are not supported).*
+- **Python 3.10**
+- *(Python 3.14 has also been verified in clean local test environments; Python 3.9 and older will fail).*
 
 ### Supported Operating Systems
 | Operating System | Support Status | Verification Notes |
@@ -72,14 +77,26 @@ Course Automation provides an accessible command-line interface to:
 
 ## macOS Installation Guide
 
-Follow these steps to set up Course Automation on macOS (Sonoma, Ventura, Monterey, or later):
+Follow these steps to set up Course Automation on macOS (Sonoma, Sequoia, Ventura, Monterey, or later):
 
-### Step 1: Install Prerequisites
-Ensure you have **Python 3.10+** and **Git** installed. You can install them using [Homebrew](https://brew.sh/):
+### Step 1: Check Python Version & Install Prerequisites
+> [!IMPORTANT]
+> **Check your Python version before creating a virtual environment.**
+> Fresh Macs frequently default to Apple's Xcode Command Line Tools Python version **3.9.6**, which does not meet the project's `>=3.10` requirement and will fail when running `pip install -e .`.
+
+Check your current installed Python version:
 ```bash
-brew install python git
+python3 --version
 ```
-*(Alternatively, install the Xcode Command Line Tools via `xcode-select --install`).*
+- If your version is **3.9.x or older**, or if `python3` is not found, install **Python 3.12** and **Git** via [Homebrew](https://brew.sh/):
+  ```bash
+  brew install python@3.12 git
+  ```
+- Verify that Python 3.12 is available:
+  ```bash
+  python3.12 --version
+  ```
+  *(Expected output: `Python 3.12.x`)*
 
 ### Step 2: Clone the Repository
 Clone your private repository and navigate into the project directory:
@@ -89,17 +106,41 @@ cd course-automation
 ```
 
 ### Step 3: Create and Activate a Virtual Environment
-Create an isolated Python virtual environment and activate it:
+Explicitly use `python3.12` to create the virtual environment so it is never bound to older system Python versions:
 ```bash
-python3 -m venv .venv
+python3.12 -m venv .venv
 source .venv/bin/activate
 ```
-*(Your terminal prompt should now show `(.venv)`).*
+*(Your terminal prompt will now show `(.venv)`).*
+
+Verify that the active virtual environment is running Python 3.12:
+```bash
+python --version
+```
+*(Must display `Python 3.12.x` or at least `Python 3.10+`).*
+
+> [!WARNING]
+> **Fixing an Existing Virtual Environment Created with Python 3.9:**
+> If you previously created `.venv` with Python 3.9, installing Python 3.12 on your Mac will not update the existing environment because `.venv` remains permanently bound to Python 3.9.
+>
+> You must delete and recreate the virtual environment:
+> ```bash
+> # 1. Deactivate if currently active
+> deactivate 2>/dev/null || true
+>
+> # 2. Delete only the isolated virtual environment folder
+> rm -rf .venv
+>
+> # 3. Recreate cleanly with Python 3.12
+> python3.12 -m venv .venv
+> source .venv/bin/activate
+> ```
+> *Safe deletion note: This command removes only the local `.venv` directory. None of your source code, project files, or Git history are touched.*
 
 ### Step 4: Upgrade Pip and Install the Project
-Upgrade `pip` to the latest version and install the project in editable mode:
+Upgrade `pip` to the latest version and install the project in editable mode using `python3.12`:
 ```bash
-python3 -m pip install --upgrade pip
+python3.12 -m pip install --upgrade pip
 pip install -e .
 ```
 > **Tip for Contributors / Testers:** If you plan to run automated tests, install development dependencies:
@@ -134,11 +175,16 @@ pytest -v
 > **Windows Verification Notice:** These instructions are based on standard Windows 10/11 PowerShell conventions and standard Playwright/Python procedures. Because our primary development machine is macOS, Windows execution has not been verified on this host and should be confirmed on your Windows machine.
 
 ### Step 1: Install Prerequisites
-1. **Python 3.10 - 3.12:**
+1. **Python 3.10 - 3.12 (Recommend 3.12):**
    - Download the official installer from [python.org](https://www.python.org/downloads/).
    - **CRITICAL:** On the first installer screen, check the box: **"Add python.exe to PATH"** before clicking Install Now.
 2. **Git for Windows:**
    - Download and install from [git-scm.com](https://git-scm.com/download/win).
+3. **Verify Version:**
+   ```powershell
+   python --version
+   ```
+   *(Ensure it reports `Python 3.10.x`, `3.11.x`, or `3.12.x`).*
 
 ### Step 2: Open PowerShell & Clone the Repository
 Open **PowerShell** (search for "PowerShell" in the Start menu) and clone the repository:
@@ -151,7 +197,17 @@ cd course-automation
 ```powershell
 python -m venv .venv
 ```
-*(If `python` is not recognized, try `py -3 -m venv .venv`).*
+*(If you have multiple Python versions installed, specify Python 3.12 explicitly: `py -3.12 -m venv .venv`).*
+
+> [!NOTE]
+> **Recreating an Outdated Environment on Windows:**
+> If an existing `.venv` was created with Python 3.9 or older, remove and recreate it safely:
+> ```powershell
+> deactivate
+> Remove-Item -Recurse -Force .venv
+> py -3.12 -m venv .venv
+> ```
+> *Safe removal note: Only the `.venv` directory is removed; all project files remain intact.*
 
 ### Step 4: Activate the Virtual Environment Safely
 By default, Windows PowerShell restricts script execution (`PSSecurityException`).
@@ -362,6 +418,34 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process
 ```env
 GEMINI_MODEL=gemini-flash-lite-latest
 ```
+
+### 7. macOS: Python 3.9 Error during `pip install -e .`
+**Symptom:**
+```
+ERROR: Package 'course-automation' requires a different Python: 3.9.6 not in '>=3.10'
+```
+**Cause:** Default macOS Command Line Tools provides Python 3.9.6. Additionally, an existing `.venv` created with Python 3.9 retains that version even if Python 3.12 is subsequently installed on the system.
+**Solution:**
+1. Install Python 3.12 via Homebrew:
+   ```bash
+   brew install python@3.12
+   ```
+2. Delete the outdated `.venv` folder (only the isolated virtual environment is removed; project files are untouched):
+   ```bash
+   rm -rf .venv
+   ```
+3. Recreate the environment using Python 3.12 explicitly:
+   ```bash
+   python3.12 -m venv .venv
+   source .venv/bin/activate
+   python3.12 -m pip install --upgrade pip
+   pip install -e .
+   ```
+4. Verify the active version:
+   ```bash
+   python --version
+   # Expected output: Python 3.12.x
+   ```
 
 ---
 
