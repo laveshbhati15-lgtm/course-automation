@@ -21,7 +21,7 @@ All contributors and participants are expected to uphold our [Code of Conduct](C
 
 ### 1. Fork & Clone
 ```bash
-git clone https://github.com/<laveshbhati15-lgtm>/course-automation.git
+git clone https://github.com/laveshbhati15-lgtm/course-automation.git
 cd course-automation
 ```
 
@@ -34,7 +34,7 @@ source .venv/bin/activate
 ### 3. Install in Editable Mode with Dev Dependencies
 ```bash
 pip install --upgrade pip
-pip install -e ".[dev,ai]"
+pip install -e ".[dev]"
 ```
 
 ### 4. Install Playwright Browsers
