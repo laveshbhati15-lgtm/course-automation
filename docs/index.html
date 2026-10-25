@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Course Automation — Local Coursework & Progress Tool for CodeChef Learn</title>
+  <meta name="description" content="Standalone, portable open-source CLI tool for inspecting course progress, reading theory concepts, and assisting with coursework on CodeChef Learn.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Navigation Bar -->
+  <header class="header">
+    <div class="header-container">
+      <a href="#" class="logo-group">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--accent-cyan);">
+          <polyline points="16 18 22 12 16 6"></polyline>
+          <polyline points="8 6 2 12 8 18"></polyline>
+        </svg>
+        <span>Course Automation</span>
+        <span class="logo-badge">v0.1.0</span>
+      </a>
+
+      <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Toggle Navigation">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="3" y1="12" x2="21" y2="12"></line>
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+      </button>
+
+      <ul class="nav-links" id="navLinks">
+        <li><a href="#overview">Overview</a></li>
+        <li><a href="#installation">Installation</a></li>
+        <li><a href="#usage">Usage</a></li>
+        <li><a href="#troubleshooting">Troubleshooting</a></li>
+        <li><a href="ARCHITECTURE.md">Architecture</a></li>
+        <li>
+          <a href="https://github.com/laveshbhati15-lgtm/course-automation" target="_blank" rel="noopener noreferrer" class="github-btn">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+              <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
+            </svg>
+            GitHub
+          </a>
+        </li>
+      </ul>
+    </div>
+  </header>
+
+  <!-- Main Layout -->
+  <div class="layout">
+    
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="sidebar-heading">Getting Started</div>
+      <ul class="sidebar-nav">
+        <li><a href="#overview">What the Project Does</a></li>
+        <li><a href="#features">Features & Limitations</a></li>
+        <li><a href="#platforms">Supported Platforms</a></li>
+        <li><a href="#quickstart">Quick Start</a></li>
+      </ul>
+
+      <div class="sidebar-heading">Installation Guides</div>
+      <ul class="sidebar-nav">
+        <li><a href="#macos-install">macOS Guide</a></li>
+        <li><a href="#windows-install">Windows (PowerShell) Guide</a></li>
+        <li><a href="#package-commands">Package Commands</a></li>
+      </ul>
+
+      <div class="sidebar-heading">Configuration & Security</div>
+      <ul class="sidebar-nav">
+        <li><a href="#auth-session">Authentication & Sessions</a></li>
+        <li><a href="#config-ai">Configuration & Optional AI</a></li>
+      </ul>
+
+      <div class="sidebar-heading">Usage & Reference</div>
+      <ul class="sidebar-nav">
+        <li><a href="#usage">CLI Usage & Examples</a></li>
+        <li><a href="#dry-run">Safe Dry-Run Testing</a></li>
+        <li><a href="#troubleshooting">Troubleshooting</a></li>
+        <li><a href="#testing">Running Tests</a></li>
+        <li><a href="#compliance">Safety & Compliance</a></li>
+      </ul>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="content">
+
+      <!-- Hero Header -->
+      <div class="hero">
+        <div class="hero-tag">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+          Standalone & Local Automation CLI
+        </div>
+        <h1 class="hero-title">CodeChef Course Automation & <span class="gradient-text">Progress Inspector</span></h1>
+        <p class="hero-subtitle">
+          A lightweight, portable open-source CLI tool for inspecting course progress, reading theory concepts, and assisting with coursework on CodeChef Learn. Runs completely on your local machine using standard Python and Playwright.
+        </p>
+        <div class="hero-author">
+          <span class="hero-author-badge">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+            Created by <strong class="author-name">Lavesh Bhati</strong>
+          </span>
+        </div>
+        <div class="hero-actions">
+          <a href="#quickstart" class="btn-primary">
+            Get Started
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+          </a>
+          <a href="https://github.com/laveshbhati15-lgtm/course-automation" target="_blank" rel="noopener noreferrer" class="btn-secondary">
+            View on GitHub
+          </a>
+        </div>
+      </div>
+
+      <!-- Overview Section -->
+      <section id="overview">
+        <h2>What the Project Does</h2>
+        <p>
+          Course Automation is designed to run locally from your terminal, connecting to your authenticated CodeChef Learn session via Playwright without requiring browser extensions or cloud daemons:
+        </p>
+
+        <div class="grid">
+          <div class="card">
+            <div class="card-icon">1</div>
+            <h4>Inspect Course Structure</h4>
+            <p>Dynamically discovers modules, theory lessons, quizzes, and coding exercises from any valid CodeChef Learn course URL or active browser tab.</p>
+          </div>
+          <div class="card">
+            <div class="card-icon">2</div>
+            <h4>Read Theory Concepts</h4>
+            <p>Smoothly scrolls through reading lessons to trigger dynamic rendering (MathJax and code snippets) and advances using accessible navigation controls.</p>
+          </div>
+          <div class="card">
+            <div class="card-icon">3</div>
+            <h4>Assist with Quizzes (MCQs)</h4>
+            <p>Extracts questions and choices, evaluates answers using heuristic matching or optional AI reasoning, and requires human confirmation before submitting.</p>
+          </div>
+          <div class="card">
+            <div class="card-icon">4</div>
+            <h4>Assist with Coding Labs</h4>
+            <p>Injects solutions into Monaco and Ace code editors across C++, Java, C, and Python using base64 buffer injection to prevent quotation or newline corruption.</p>
+          </div>
+          <div class="card">
+            <div class="card-icon">5</div>
+            <h4>Track Offline Progress</h4>
+            <p>Maintains a local SQLite database of course syllabi, module breakdowns, and completion metrics without requiring an active browser connection.</p>
+          </div>
+          <div class="card">
+            <div class="card-icon">6</div>
+            <h4>Safety by Default</h4>
+            <p>Provides a non-mutating <code>--dry-run</code> mode to simulate operations without submitting, plus regex filters to redact credentials from all logs.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Features & Limitations -->
+      <section id="features">
+        <h2>Features & Known Limitations</h2>
+        
+        <h3>Core Features</h3>
+        <ul style="color: var(--text-muted); margin-left: 1.5rem; margin-bottom: 1.5rem; line-height: 1.8;">
+          <li><strong>Dynamic Course Discovery:</strong> Operates on any valid CodeChef Learn course URL; nothing is hardcoded to a specific subject.</li>
+          <li><strong>Active Tab Auto-Detection:</strong> Detects which course tab is currently open in your browser session if no URL is passed.</li>
+          <li><strong>Zero-Mutation Dry-Run:</strong> Full simulation mode (<code>--dry-run</code>) to inspect pages, read content, and reason about questions without clicking submit or altering course progress.</li>
+          <li><strong>Interactive Confirmation:</strong> Prompts for terminal approval before any live submission unless <code>--auto-approve</code> is explicitly passed.</li>
+          <li><strong>Credential Redaction:</strong> Automatically scrubs API keys, session tokens, and passwords from console output and log files.</li>
+        </ul>
+
+        <h3>Known Limitations</h3>
+        <div class="callout callout-warning">
+          <div class="callout-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+            Scope & Platform Limitations
+          </div>
+          <p><strong>Locked Activities (<code>LOCKED_SKIPPED</code>):</strong> Activities locked by prerequisite gates or scheduling deadlines are recognized honestly and skipped; they are never bypassed.</p>
+          <p><strong>Proctored Exams:</strong> Proctored tests, webcam-monitored exams, or lockdown browser assessments are completely unsupported.</p>
+          <p><strong>CAPTCHAs / Bot Challenges:</strong> Rare Cloudflare or CAPTCHA challenges require manual completion in the headful browser window.</p>
+          <p><strong>Supported Sites:</strong> Only CodeChef Learn is currently implemented.</p>
+        </div>
+      </section>
+
+      <!-- Supported Platforms -->
+      <section id="platforms">
+        <h2>Supported Operating Systems & Python Versions</h2>
+
+        <h3>Python Compatibility</h3>
+        <p>The project requires Python 3.10 or newer (modern union type syntax <code>A | B</code> is used throughout the codebase):</p>
+        <ul style="color: var(--text-muted); margin-left: 1.5rem; margin-bottom: 1.5rem; line-height: 1.8;">
+          <li><strong>Python 3.10, 3.11, 3.12:</strong> Supported and tested.</li>
+          <li><strong>Python 3.14:</strong> Tested and verified in local clean test environments.</li>
+          <li><strong>Python 3.9 and older:</strong> Not supported.</li>
+        </ul>
+
+        <h3>Operating System Matrix</h3>
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Operating System</th>
+                <th>Status</th>
+                <th>Verification Notes</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>macOS (Apple Silicon & Intel)</strong></td>
+                <td><span class="badge badge-verified">Verified</span></td>
+                <td>Fully tested and verified on macOS Darwin with Python 3.12 and 3.14.</td>
+              </tr>
+              <tr>
+                <td><strong>Linux (Ubuntu, Debian, Fedora)</strong></td>
+                <td><span class="badge badge-supported">Supported</span></td>
+                <td>Standard POSIX Python and Playwright environments.</td>
+              </tr>
+              <tr>
+                <td><strong>Windows 10 / Windows 11</strong></td>
+                <td><span class="badge badge-unverified">Unverified on Host</span></td>
+                <td>Architecturally supported; instructions below use standard PowerShell workflows. Must be validated on a physical Windows machine.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Quick Start Tabbed Component -->
+      <section id="quickstart">
+        <h2>Quick Start Installation</h2>
+        <p>Choose your operating system below for complete copy-paste setup instructions:</p>
+
+        <div class="tab-container">
+          <div class="tab-header">
+            <button class="tab-btn active" data-tab="tab-macos">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.37c.62-.75 1.04-1.8 0.92-2.85-.9.04-2 .6-2.65 1.35-.58.66-1.09 1.73-.95 2.76 1.01.08 2.05-.51 2.68-1.26z"/></svg>
+              macOS
+            </button>
+            <button class="tab-btn" data-tab="tab-windows">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M0 3.449L9.75 2.1v9.451H0m10.949-9.602L24 0v11.4H10.949M0 12.6h9.75v9.451L0 20.699M10.949 12.6H24V24l-12.9-1.801"/></svg>
+              Windows 10/11 (PowerShell)
+            </button>
+          </div>
+
+          <!-- macOS Tab Content -->
+          <div class="tab-content active" id="tab-macos">
+            <p><strong>Step 1: Install Prerequisites</strong> (Homebrew)</p>
+            <div class="code-block">
+              <div class="code-header">
+                <span>bash</span>
+                <button class="copy-btn">Copy</button>
+              </div>
+              <pre><code>brew install python git</code></pre>
+            </div>
+
+            <p><strong>Step 2: Clone & Enter Repository</strong></p>
+            <div class="code-block">
+              <div class="code-header">
+                <span>bash</span>
+                <button class="copy-btn">Copy</button>
+              </div>
+              <pre><code>git clone https://github.com/laveshbhati15-lgtm/course-automation.git
+cd course-automation</code></pre>
+            </div>
+
+            <p><strong>Step 3: Create & Activate Virtual Environment</strong></p>
+            <div class="code-block">
+              <div class="code-header">
+                <span>bash</span>
+                <button class="copy-btn">Copy</button>
+              </div>
+              <pre><code>python3 -m venv .venv
+source .venv/bin/activate</code></pre>
+            </div>
+
+            <p><strong>Step 4: Upgrade Pip & Install Project</strong></p>
+            <div class="code-block">
+              <div class="code-header">
+                <span>bash</span>
+                <button class="copy-btn">Copy</button>
+              </div>
+              <pre><code>python3 -m pip install --upgrade pip
+pip install -e .</code></pre>
+            </div>
+
+            <p><strong>Step 5: Install Playwright Chromium Browser</strong></p>
+            <div class="code-block">
+              <div class="code-header">
+                <span>bash</span>
+                <button class="copy-btn">Copy</button>
+              </div>
+              <pre><code>playwright install chromium</code></pre>
+            </div>
+
+            <p><strong>Step 6: Verify CLI</strong></p>
+            <div class="code-block">
+              <div class="code-header">
+                <span>bash</span>
+                <button class="copy-btn">Copy</button>
+              </div>
+              <pre><code>course-automation --help
+course-automation config</code></pre>
+            </div>
+          </div>
+
+          <!-- Windows Tab Content -->
+          <div class="tab-content" id="tab-windows">
+            <div class="callout callout-info">
+              <div class="callout-title">Windows Prerequisites</div>
+              <p>Install <strong>Python 3.10-3.12</strong> from <a href="https://www.python.org/downloads/" target="_blank" rel="noopener noreferrer" style="color: var(--accent-cyan);">python.org</a> (Ensure <strong>"Add python.exe to PATH"</strong> is checked) and <strong>Git for Windows</strong> from <a href="https://git-scm.com/download/win" target="_blank" rel="noopener noreferrer" style="color: var(--accent-cyan);">git-scm.com</a>.</p>
+            </div>
+
+            <p><strong>Step 1: Clone Repository in PowerShell</strong></p>
+            <div class="code-block">
+              <div class="code-header">
+                <span>powershell</span>
+                <button class="copy-btn">Copy</button>
+              </div>
+              <pre><code>git clone https://github.com/laveshbhati15-lgtm/course-automation.git
+cd course-automation</code></pre>
+            </div>
+
+            <p><strong>Step 2: Create Virtual Environment</strong></p>
+            <div class="code-block">
+              <div class="code-header">
+                <span>powershell</span>
+                <button class="copy-btn">Copy</button>
+              </div>
+              <pre><code>python -m venv .venv</code></pre>
+            </div>
+
+            <p><strong>Step 3: Activate Safely (Bypassing Script Restrictions for this Session)</strong></p>
+            <div class="code-block">
+              <div class="code-header">
+                <span>powershell</span>
+                <button class="copy-btn">Copy</button>
+              </div>
+              <pre><code>Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process
+.venv\Scripts\Activate.ps1</code></pre>
+            </div>
+
+            <p><strong>Step 4: Upgrade Pip & Install Dependencies</strong></p>
+            <div class="code-block">
+              <div class="code-header">
+                <span>powershell</span>
+                <button class="copy-btn">Copy</button>
+              </div>
+              <pre><code>python -m pip install --upgrade pip
+pip install -e .</code></pre>
+            </div>
+
+            <p><strong>Step 5: Install Playwright Chromium Browser</strong></p>
+            <div class="code-block">
+              <div class="code-header">
+                <span>powershell</span>
+                <button class="copy-btn">Copy</button>
+              </div>
+              <pre><code>playwright install chromium</code></pre>
+            </div>
+
+            <p><strong>Step 6: Verify Installation</strong></p>
+            <div class="code-block">
+              <div class="code-header">
+                <span>powershell</span>
+                <button class="copy-btn">Copy</button>
+              </div>
+              <pre><code>course-automation --help
+course-automation config</code></pre>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Package Commands Reference -->
+      <section id="package-commands">
+        <h2>Package Installation Commands Reference</h2>
+        <p>The project relies strictly on standard Python packaging specified in <code>pyproject.toml</code>:</p>
+
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Command</th>
+                <th>Target Package / Extra</th>
+                <th>When to Use</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>pip install -e .</code></td>
+                <td>Base Project & Runtime</td>
+                <td>Standard installation for users (Playwright, Typer, Rich, Pydantic, Requests, Dotenv).</td>
+              </tr>
+              <tr>
+                <td><code>pip install -e ".[dev]"</code></td>
+                <td>Development & Testing</td>
+                <td>For developers and running the 67 automated tests (includes <code>pytest</code>, <code>pytest-mock</code>, <code>google-genai</code>).</td>
+              </tr>
+              <tr>
+                <td><code>pip install -e ".[ai]"</code></td>
+                <td>Optional AI Reasoning</td>
+                <td>Installs Google Gemini SDK (<code>google-genai</code>) for MCQ reasoning assistance.</td>
+              </tr>
+              <tr>
+                <td><code>playwright install chromium</code></td>
+                <td>Browser Binaries</td>
+                <td>Downloads the standalone Chromium browser binary required by Playwright.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Authentication & Session Safety -->
+      <section id="auth-session">
+        <h2>Authentication & Browser Session Handling</h2>
+        <p>
+          Course Automation uses a persistent local browser profile to maintain your logged-in state without storing your plaintext username or password.
+        </p>
+
+        <h3>One-Time Login Command</h3>
+        <div class="code-block">
+          <div class="code-header">
+            <span>bash</span>
+            <button class="copy-btn">Copy</button>
+          </div>
+          <pre><code>course-automation auth</code></pre>
+        </div>
+        <ol style="color: var(--text-muted); margin-left: 1.5rem; margin-bottom: 1.5rem; line-height: 1.8;">
+          <li>A headful Chromium window opens to the CodeChef login page.</li>
+          <li>Log in manually via your preferred provider (Email/Password, Google OAuth, GitHub).</li>
+          <li>The CLI detects successful login, caches cookies, and exits cleanly.</li>
+        </ol>
+
+        <div class="callout callout-danger">
+          <div class="callout-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+            Session Storage Security Notice (No Application Encryption)
+          </div>
+          <p>
+            Browser cookies and session state are saved locally inside <code>~/.course_automation/browser_profile</code> (or <code>%USERPROFILE%\.course_automation\browser_profile</code> on Windows) in standard Chromium directory format.
+          </p>
+          <p>
+            <strong>They are NOT encrypted at rest by the application.</strong> Session privacy is protected strictly by your operating system user account filesystem permissions. Never share or commit your <code>.course_automation</code> folder to version control.
+          </p>
+        </div>
+      </section>
+
+      <!-- Configuration & Optional AI -->
+      <section id="config-ai">
+        <h2>Configuration & Optional AI Setup</h2>
+        <p>
+          Course Automation is <strong>100% functional without an AI provider</strong> (default: <code>AI_PROVIDER=none</code>) for syllabus inspection, reading theory lessons, and tracking progress.
+        </p>
+
+        <h3>Enabling Google Gemini for MCQ Reasoning (Optional)</h3>
+        <p>1. Copy the configuration template:</p>
+        <div class="code-block">
+          <div class="code-header"><span>bash</span><button class="copy-btn">Copy</button></div>
+          <pre><code>cp .env.example .env</code></pre>
+        </div>
+
+        <p>2. Install optional AI dependencies:</p>
+        <div class="code-block">
+          <div class="code-header"><span>bash</span><button class="copy-btn">Copy</button></div>
+          <pre><code>pip install -e ".[ai]"</code></pre>
+        </div>
+
+        <p>3. Edit <code>.env</code> with your Google AI Studio API key:</p>
+        <div class="code-block">
+          <div class="code-header"><span>env</span><button class="copy-btn">Copy</button></div>
+          <pre><code>AI_PROVIDER=gemini
+GEMINI_API_KEY=your_google_ai_studio_api_key_here
+GEMINI_MODEL=gemini-flash-lite-latest</code></pre>
+        </div>
+
+        <div class="callout callout-info">
+          <div class="callout-title">Google AI Studio Free Tier Notice</div>
+          <p>Personal developer API keys can be generated at <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" style="color: var(--accent-cyan);">Google AI Studio</a>. The <code>gemini-flash-lite-latest</code> model is eligible for Google's developer free tier. <em>Disclaimer: API availability, quotas, and rate limits are governed by Google. The project does not guarantee unlimited or perpetual free access.</em></p>
+        </div>
+      </section>
+
+      <!-- CLI Usage & Examples -->
+      <section id="usage">
+        <h2>CLI Usage & Examples</h2>
+
+        <h3>1. Inspect Any Course Syllabus</h3>
+        <p>Displays all units, module names, activity counts, and completion percentages:</p>
+        <div class="code-block">
+          <div class="code-header"><span>bash</span><button class="copy-btn">Copy</button></div>
+          <pre><code>course-automation inspect https://www.codechef.com/learn/course/cu-oops-sem3-2026-c2</code></pre>
+        </div>
+        <p><em>Tip: If you already have the course open in your browser, omit the URL to auto-detect the active tab:</em></p>
+        <div class="code-block">
+          <div class="code-header"><span>bash</span><button class="copy-btn">Copy</button></div>
+          <pre><code>course-automation inspect</code></pre>
+        </div>
+
+        <h3>2. Filter Only Incomplete Activities</h3>
+        <div class="code-block">
+          <div class="code-header"><span>bash</span><button class="copy-btn">Copy</button></div>
+          <pre><code>course-automation inspect https://www.codechef.com/learn/course/cu-oops-sem3-2026-c2 --incomplete-only</code></pre>
+        </div>
+
+        <h3>3. Interactively Select a Specific Module</h3>
+        <div class="code-block">
+          <div class="code-header"><span>bash</span><button class="copy-btn">Copy</button></div>
+          <pre><code>course-automation inspect https://www.codechef.com/learn/course/cu-oops-sem3-2026-c2 --select-module</code></pre>
+        </div>
+
+        <h3>4. Safe Dry-Run Simulation (Recommended First Run)</h3>
+        <div class="code-block">
+          <div class="code-header"><span>bash</span><button class="copy-btn">Copy</button></div>
+          <pre><code>course-automation solve https://www.codechef.com/learn/course/cu-oops-sem3-2026-c2 --dry-run</code></pre>
+        </div>
+
+        <h3>5. Assisted Reading & Quizzes (Interactive Confirmation)</h3>
+        <div class="code-block">
+          <div class="code-header"><span>bash</span><button class="copy-btn">Copy</button></div>
+          <pre><code>course-automation solve https://www.codechef.com/learn/course/cu-oops-sem3-2026-c2 --theory-only --max-activities 5</code></pre>
+        </div>
+
+        <h3>6. View Offline SQLite Progress Summary</h3>
+        <div class="code-block">
+          <div class="code-header"><span>bash</span><button class="copy-btn">Copy</button></div>
+          <pre><code>course-automation status</code></pre>
+        </div>
+      </section>
+
+      <!-- Safe Dry-Run Testing -->
+      <section id="dry-run">
+        <h2>Safe Dry-Run Testing</h2>
+        <p>The <code>--dry-run</code> flag is an intentional safety feature designed to protect your account and course progress:</p>
+        <div class="grid">
+          <div class="card">
+            <h4>Theory Reading Lessons</h4>
+            <p>Scrolls down the page to trigger dynamic MathJax rendering and code formatting, verifies that the Next/Continue button is enabled, but <strong>does not click it</strong>.</p>
+          </div>
+          <div class="card">
+            <h4>Quizzes (MCQs)</h4>
+            <p>Extracts the question stem and all multiple-choice options, evaluates reasoning, but <strong>never clicks any radio button or submits the answer</strong>.</p>
+          </div>
+          <div class="card">
+            <h4>Coding Exercises</h4>
+            <p>Detects the problem statement, active language, and starter code without clicking Run or submitting code to the grading queue.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Troubleshooting -->
+      <section id="troubleshooting">
+        <h2>Troubleshooting Guide</h2>
+        <p>Click any common issue below for immediate resolution steps:</p>
+
+        <div class="accordion">
+          <div class="accordion-item">
+            <button class="accordion-trigger">
+              <span>1. Browser Error: <code>Executable doesn't exist at ...</code></span>
+              <span class="accordion-icon">▼</span>
+            </button>
+            <div class="accordion-content">
+              <p>The Playwright Chromium browser binary has not been installed yet. Run:</p>
+              <div class="code-block">
+                <div class="code-header"><span>bash</span><button class="copy-btn">Copy</button></div>
+                <pre><code>playwright install chromium</code></pre>
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item">
+            <button class="accordion-trigger">
+              <span>2. Session Expired or <code>403 Not Authorised</code></span>
+              <span class="accordion-icon">▼</span>
+            </button>
+            <div class="accordion-content">
+              <p>Your CodeChef session cookies have expired. Re-authenticate using the headful browser:</p>
+              <div class="code-block">
+                <div class="code-header"><span>bash</span><button class="copy-btn">Copy</button></div>
+                <pre><code>course-automation auth</code></pre>
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item">
+            <button class="accordion-trigger">
+              <span>3. Windows PowerShell: Script Execution Disabled (<code>PSSecurityException</code>)</span>
+              <span class="accordion-icon">▼</span>
+            </button>
+            <div class="accordion-content">
+              <p>Do NOT disable system security globally. Instead, grant script permissions only to the current PowerShell process:</p>
+              <div class="code-block">
+                <div class="code-header"><span>powershell</span><button class="copy-btn">Copy</button></div>
+                <pre><code>Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process
+.venv\Scripts\Activate.ps1</code></pre>
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item">
+            <button class="accordion-trigger">
+              <span>4. Windows: <code>'python' is not recognized as an internal or external command</code></span>
+              <span class="accordion-icon">▼</span>
+            </button>
+            <div class="accordion-content">
+              <p>Python was installed without adding it to the system PATH. You can use the Windows Python launcher instead:</p>
+              <div class="code-block">
+                <div class="code-header"><span>powershell</span><button class="copy-btn">Copy</button></div>
+                <pre><code>py -3 -m venv .venv</code></pre>
+              </div>
+              <p>Or reinstall Python from <a href="https://python.org" target="_blank" rel="noopener noreferrer" style="color: var(--accent-cyan);">python.org</a> and check <strong>"Add python.exe to PATH"</strong>.</p>
+            </div>
+          </div>
+
+          <div class="accordion-item">
+            <button class="accordion-trigger">
+              <span>5. CDP Protocol Error / Port 9222 Conflict</span>
+              <span class="accordion-icon">▼</span>
+            </button>
+            <div class="accordion-content">
+              <p>If you see <code>Protocol error (Browser.setDownloadBehavior)</code>, leave <code>BROWSER_CDP_URL=</code> empty in your <code>.env</code> file. The tool will automatically use its standalone persistent browser profile.</p>
+            </div>
+          </div>
+
+          <div class="accordion-item">
+            <button class="accordion-trigger">
+              <span>6. Model Error: <code>404 NOT_FOUND: models/... is no longer available</code></span>
+              <span class="accordion-icon">▼</span>
+            </button>
+            <div class="accordion-content">
+              <p>In your <code>.env</code> file, update <code>GEMINI_MODEL</code> to an active model:</p>
+              <div class="code-block">
+                <div class="code-header"><span>env</span><button class="copy-btn">Copy</button></div>
+                <pre><code>GEMINI_MODEL=gemini-flash-lite-latest</code></pre>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Testing & Contributor Instructions -->
+      <section id="testing">
+        <h2>Running Automated Tests</h2>
+        <p>All 67 tests in the test suite run 100% offline using synthetic mocks and isolated local databases:</p>
+        <div class="code-block">
+          <div class="code-header"><span>bash</span><button class="copy-btn">Copy</button></div>
+          <pre><code>pip install -e ".[dev]"
+pytest -v</code></pre>
+        </div>
+
+        <div class="callout callout-warning">
+          <div class="callout-title">Testing Rule for Contributors</div>
+          <p><strong>Never run automated tests against live personal courses or user accounts.</strong> In particular, never use completed or active courses (such as DBMS <code>cu-dbms-sem3-2026-c2</code>) as a test target. All tests must be validated using mocked DOM pages, synthetic fixtures, and local database instances.</p>
+        </div>
+      </section>
+
+      <!-- Safety & Compliance -->
+      <section id="compliance">
+        <h2>Safety, Compliance & Responsible Use</h2>
+        <div class="callout callout-danger">
+          <div class="callout-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+            Educational & Study Tracking Notice
+          </div>
+          <p>
+            Course Automation is an independent open-source tool created solely for personal study tracking and coursework assistance.
+          </p>
+          <p>
+            Users are solely responsible for ensuring compliance with CodeChef's Terms of Service, their academic institution's Honor Code, and all applicable academic integrity policies. The maintainers assume no liability for misuse, account penalties, or policy violations.
+          </p>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <div class="footer-container">
+      <div>
+        <strong>Course Automation</strong> — Created by Lavesh Bhati. MIT Licensed Open Source Project.
+      </div>
+      <div class="footer-links">
+        <a href="https://github.com/laveshbhati15-lgtm/course-automation" target="_blank" rel="noopener noreferrer">GitHub Repository</a>
+        <a href="ARCHITECTURE.md">Architecture Guide</a>
+        <a href="DEVELOPMENT.md">Developer Guide</a>
+        <a href="https://github.com/laveshbhati15-lgtm/course-automation/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">MIT License</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
