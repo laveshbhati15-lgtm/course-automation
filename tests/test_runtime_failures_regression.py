@@ -400,3 +400,247 @@ def test_navigator_never_counts_failed_or_unverified_coding_as_completed(tmp_pat
     assert report.completed_count == 1  # Only C3 counted!
     assert report.failed_count == 2     # C1 and C2 failed!
     assert report.skipped_count == 0
+
+
+# ==============================================================================
+# 6. QUIZ OPTION DETECTION & NO-OPTIONS REGRESSION TESTS
+# ==============================================================================
+
+def test_quiz_question_with_no_options_never_guesses_or_completes_dry_run():
+    """Verify that a question with statement but 0 options returns QUESTION_OPTIONS_NOT_FOUND even in dry-run."""
+    handler = QuizActivityHandler()
+    page = MagicMock()
+    page.frames = [page]
+
+    # Statement exists
+    stmt_loc = MagicMock()
+    stmt_loc.count.return_value = 1
+    stmt_loc.is_visible.return_value = True
+    stmt_loc.inner_text.return_value = "Quiz Application Using Java Swing: Build a GUI application."
+
+    def mock_locator(sel):
+        mock = MagicMock()
+        if "statement" in sel or "problemBody" in sel:
+            mock.first = stmt_loc
+            mock.count.return_value = 1
+            return mock
+        mock.all.return_value = []
+        mock.count.return_value = 0
+        mock.first.count.return_value = 0
+        mock.first.is_visible.return_value = False
+        return mock
+
+    page.locator.side_effect = mock_locator
+
+    activity = ActivitySummary(
+        id="JAVASWING",
+        title="Quiz Application Using Java Swing",
+        slug="JAVASWING",
+        type=ActivityType.QUIZ,
+    )
+    ai = MagicMock()
+
+    # Dry-run execution
+    record_dry = handler.execute(activity, page, ai_provider=ai, dry_run=True)
+    assert record_dry.verdict == "QUESTION_OPTIONS_NOT_FOUND"
+    assert record_dry.verdict != "DRY_RUN_PASSED"
+    assert "no selectable options" in record_dry.details
+    ai.reason_mcq.assert_not_called()
+
+    # Live execution
+    record_live = handler.execute(activity, page, ai_provider=ai, dry_run=False)
+    assert record_live.verdict == "QUESTION_OPTIONS_NOT_FOUND"
+    assert record_live.verdict != "ACCEPTED"
+    ai.reason_mcq.assert_not_called()
+
+
+def test_quiz_option_detection_div_optionbox():
+    """Verify that options in div elements with _optionBox_ class are correctly extracted."""
+    handler = QuizActivityHandler()
+    page = MagicMock()
+    page.frames = [page]
+
+    stmt = MagicMock()
+    stmt.count.return_value = 1
+    stmt.is_visible.return_value = True
+    stmt.inner_text.return_value = "What is JFrame in Java Swing?"
+
+    opt1 = MagicMock()
+    opt1.inner_text.return_value = "A top-level container window"
+    opt1.locator.return_value.first.count.return_value = 0
+
+    opt2 = MagicMock()
+    opt2.inner_text.return_value = "A layout manager"
+    opt2.locator.return_value.first.count.return_value = 0
+
+    def mock_loc(sel):
+        mock = MagicMock()
+        if "statement" in sel:
+            mock.first = stmt
+            mock.count.return_value = 1
+            return mock
+        if "_optionBox_" in sel:
+            mock.all.return_value = [opt1, opt2]
+            mock.count.return_value = 2
+            return mock
+        mock.all.return_value = []
+        mock.count.return_value = 0
+        mock.first.count.return_value = 0
+        mock.first.is_visible.return_value = False
+        return mock
+
+    page.locator.side_effect = mock_loc
+
+    q_text, options = handler.extract_question_and_options(page)
+    assert "What is JFrame" in q_text
+    assert len(options) == 2
+    assert options[0]["label"] == "A top-level container window"
+    assert options[1]["label"] == "A layout manager"
+
+
+def test_quiz_option_detection_options_container_children():
+    """Verify fallback extraction from children of _optionsContainer_ when class selectors differ."""
+    handler = QuizActivityHandler()
+    page = MagicMock()
+    page.frames = [page]
+
+    stmt = MagicMock()
+    stmt.count.return_value = 1
+    stmt.is_visible.return_value = True
+    stmt.inner_text.return_value = "Which component displays text in Swing?"
+
+    child1 = MagicMock()
+    child1.inner_text.return_value = "JLabel"
+    child1.locator.return_value.first.count.return_value = 0
+
+    child2 = MagicMock()
+    child2.inner_text.return_value = "JButton"
+    child2.locator.return_value.first.count.return_value = 0
+
+    container = MagicMock()
+    container.count.return_value = 1
+    container.is_visible.return_value = True
+    container.locator.return_value.all.return_value = [child1, child2]
+
+    def mock_loc(sel):
+        mock = MagicMock()
+        if "statement" in sel:
+            mock.first = stmt
+            mock.count.return_value = 1
+            return mock
+        if "_optionsContainer_" in sel:
+            mock.first = container
+            mock.count.return_value = 1
+            return mock
+        mock.all.return_value = []
+        mock.count.return_value = 0
+        mock.first.count.return_value = 0
+        mock.first.is_visible.return_value = False
+        return mock
+
+    page.locator.side_effect = mock_loc
+
+    q_text, options = handler.extract_question_and_options(page)
+    assert "Which component displays text" in q_text
+    assert len(options) == 2
+    assert options[0]["label"] == "JLabel"
+    assert options[1]["label"] == "JButton"
+
+
+def test_quiz_option_detection_nested_iframe():
+    """Verify that options and statement inside a nested iframe are discovered."""
+    handler = QuizActivityHandler()
+
+    main_frame = MagicMock()
+    main_frame.locator.return_value.first.count.return_value = 0
+    main_frame.locator.return_value.all.return_value = []
+
+    iframe = MagicMock()
+    stmt = MagicMock()
+    stmt.count.return_value = 1
+    stmt.is_visible.return_value = True
+    stmt.inner_text.return_value = "Inside Iframe: What is JPanel?"
+
+    opt1 = MagicMock()
+    opt1.inner_text.return_value = "A lightweight container"
+    opt1.locator.return_value.first.count.return_value = 0
+
+    opt2 = MagicMock()
+    opt2.inner_text.return_value = "A database connection"
+    opt2.locator.return_value.first.count.return_value = 0
+
+    def iframe_loc(sel):
+        mock = MagicMock()
+        if "statement" in sel:
+            mock.first = stmt
+            mock.count.return_value = 1
+            return mock
+        if "_optionBox_" in sel or "MuiFormControlLabel" in sel:
+            mock.all.return_value = [opt1, opt2]
+            mock.count.return_value = 2
+            return mock
+        mock.all.return_value = []
+        mock.count.return_value = 0
+        mock.first.count.return_value = 0
+        mock.first.is_visible.return_value = False
+        return mock
+
+    iframe.locator.side_effect = iframe_loc
+
+    page = MagicMock()
+    page.frames = [main_frame, iframe]
+
+    q_text, options = handler.extract_question_and_options(page)
+    assert "Inside Iframe: What is JPanel?" in q_text
+    assert len(options) == 2
+    assert options[0]["label"] == "A lightweight container"
+    assert options[1]["label"] == "A database connection"
+
+
+def test_quiz_option_detection_direct_radio_inputs():
+    """Verify fallback to direct input[type='radio'] elements when wrappers have custom classes."""
+    handler = QuizActivityHandler()
+    page = MagicMock()
+    page.frames = [page]
+
+    stmt = MagicMock()
+    stmt.count.return_value = 1
+    stmt.is_visible.return_value = True
+    stmt.inner_text.return_value = "Swing is thread safe?"
+
+    radio1 = MagicMock()
+    radio1.is_checked.return_value = False
+    parent1 = MagicMock()
+    parent1.count.return_value = 1
+    parent1.inner_text.return_value = "No, Swing is not thread safe"
+    radio1.locator.return_value.first = parent1
+
+    radio2 = MagicMock()
+    radio2.is_checked.return_value = False
+    parent2 = MagicMock()
+    parent2.count.return_value = 1
+    parent2.inner_text.return_value = "Yes, Swing is completely thread safe"
+    radio2.locator.return_value.first = parent2
+
+    def mock_loc(sel):
+        mock = MagicMock()
+        if "statement" in sel:
+            mock.first = stmt
+            mock.count.return_value = 1
+            return mock
+        if sel == "input[type='radio']":
+            mock.all.return_value = [radio1, radio2]
+            mock.count.return_value = 2
+            return mock
+        mock.all.return_value = []
+        mock.count.return_value = 0
+        mock.first.count.return_value = 0
+        mock.first.is_visible.return_value = False
+        return mock
+
+    page.locator.side_effect = mock_loc
+
+    q_text, options = handler.extract_question_and_options(page)
+    assert len(options) == 2
+    assert "No, Swing is not thread safe" in options[0]["label"]
+    assert "Yes, Swing is completely thread safe" in options[1]["label"]
