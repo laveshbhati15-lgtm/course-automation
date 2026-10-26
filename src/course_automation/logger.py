@@ -1,8 +1,10 @@
 """Sanitized structured logging ensuring secrets and tokens are never leaked."""
 
 import logging
+import os
 import re
 import sys
+from typing import Optional
 
 SENSITIVE_PATTERNS = [
     re.compile(r"AIza[0-9A-Za-z-_]{35}"),
@@ -31,14 +33,17 @@ class SanitizingFilter(logging.Filter):
         return True
 
 
-def setup_logging(level: str = "INFO") -> logging.Logger:
+def setup_logging(level: Optional[str] = None) -> logging.Logger:
     """Configure and return the root package logger."""
+    if level is None:
+        level = os.environ.get("LOG_LEVEL", "INFO")
     pkg_logger = logging.getLogger("course_automation")
-    pkg_logger.setLevel(getattr(logging, level.upper(), logging.INFO))
+    target_level = getattr(logging, str(level).upper(), logging.INFO)
+    pkg_logger.setLevel(target_level)
 
     if not pkg_logger.handlers:
         handler = logging.StreamHandler(sys.stdout)
-        handler.setLevel(getattr(logging, level.upper(), logging.INFO))
+        handler.setLevel(target_level)
         formatter = logging.Formatter(
             fmt="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
             datefmt="%Y-%m-%d %H:%M:%S"
@@ -46,6 +51,9 @@ def setup_logging(level: str = "INFO") -> logging.Logger:
         handler.setFormatter(formatter)
         handler.addFilter(SanitizingFilter())
         pkg_logger.addHandler(handler)
+    else:
+        for handler in pkg_logger.handlers:
+            handler.setLevel(target_level)
 
     return pkg_logger
 

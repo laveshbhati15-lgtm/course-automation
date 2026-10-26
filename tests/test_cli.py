@@ -106,3 +106,14 @@ def test_cli_status_with_synthetic_course(tmp_path):
         assert result_course.exit_code == 0
         assert "Synthetic Open Source Course" in result_course.stdout
         assert "Unit 1: Fundamentals" in result_course.stdout
+
+
+def test_cli_config_check_ai():
+    with patch("course_automation.cli.GeminiProvider") as mock_prov_cls:
+        mock_prov = MagicMock()
+        mock_prov._client.models.generate_content.return_value.text = "OK"
+        mock_prov_cls.return_value = mock_prov
+        with patch("course_automation.cli.settings.gemini_api_key", "mock_key_value"):
+            result = runner.invoke(app, ["config", "--check-ai"])
+            assert result.exit_code == 0
+            assert "verified successfully" in result.stdout

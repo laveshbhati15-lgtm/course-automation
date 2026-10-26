@@ -35,6 +35,7 @@
       <ul class="nav-links" id="navLinks">
         <li><a href="#overview">Overview</a></li>
         <li><a href="#installation">Installation</a></li>
+        <li><a href="#fedora-install">Fedora Linux</a></li>
         <li><a href="#usage">Usage</a></li>
         <li><a href="#troubleshooting">Troubleshooting</a></li>
         <li><a href="ARCHITECTURE.md">Architecture</a></li>
@@ -52,7 +53,7 @@
 
   <!-- Main Layout -->
   <div class="layout">
-    
+
     <!-- Sidebar Navigation -->
     <aside class="sidebar">
       <div class="sidebar-heading">Getting Started</div>
@@ -60,11 +61,13 @@
         <li><a href="#overview">What the Project Does</a></li>
         <li><a href="#features">Features & Limitations</a></li>
         <li><a href="#platforms">Supported Platforms</a></li>
-        <li><a href="#quickstart">Quick Start</a></li>
+        <li><a href="#installation">Download & Overview</a></li>
+        <li><a href="#quickstart">Platform Selector (Tabs)</a></li>
       </ul>
 
       <div class="sidebar-heading">Installation Guides</div>
       <ul class="sidebar-nav">
+        <li><a href="#fedora-install">Fedora Linux Guide</a></li>
         <li><a href="#macos-install">macOS Guide</a></li>
         <li><a href="#windows-install">Windows (PowerShell) Guide</a></li>
         <li><a href="#package-commands">Package Commands</a></li>
@@ -140,7 +143,7 @@
           <div class="card">
             <div class="card-icon">3</div>
             <h4>Assist with Quizzes (MCQs)</h4>
-            <p>Extracts questions and choices, evaluates answers using heuristic matching or optional AI reasoning, and requires human confirmation before submitting.</p>
+            <p>Extracts questions and choices, evaluates answers using heuristic matching or the Gemini AI search & reasoning engine, and requires human confirmation before submitting.</p>
           </div>
           <div class="card">
             <div class="card-icon">4</div>
@@ -163,7 +166,7 @@
       <!-- Features & Limitations -->
       <section id="features">
         <h2>Features & Known Limitations</h2>
-        
+
         <h3>Core Features</h3>
         <ul style="color: var(--text-muted); margin-left: 1.5rem; margin-bottom: 1.5rem; line-height: 1.8;">
           <li><strong>Dynamic Course Discovery:</strong> Operates on any valid CodeChef Learn course URL; nothing is hardcoded to a specific subject.</li>
@@ -219,9 +222,14 @@
                 <td>Fully tested and verified on macOS Darwin with Python 3.12 and 3.14.</td>
               </tr>
               <tr>
-                <td><strong>Linux (Ubuntu, Debian, Fedora)</strong></td>
+                <td><strong>Fedora Linux (39, 40, 41, 42)</strong></td>
+                <td><span class="badge badge-verified">Documented</span></td>
+                <td>Complete beginner-friendly setup with native Python 3.12/3.13, DNF, and Playwright Chromium.</td>
+              </tr>
+              <tr>
+                <td><strong>Other Linux (Ubuntu, Debian, Arch)</strong></td>
                 <td><span class="badge badge-supported">Supported</span></td>
-                <td>Standard POSIX Python and Playwright environments.</td>
+                <td>Standard POSIX Python 3.10+ and Playwright environments.</td>
               </tr>
               <tr>
                 <td><strong>Windows 10 / Windows 11</strong></td>
@@ -230,6 +238,121 @@
               </tr>
             </tbody>
           </table>
+        </div>
+      </section>
+
+      <!-- Download & Installation Overview -->
+      <section id="installation">
+        <h2>Download & Installation Overview</h2>
+        <p>
+          Getting started with Course Automation takes just a few minutes. Whether you are on <strong>Fedora Linux</strong>, <strong>macOS</strong>, or <strong>Windows</strong>, the installation workflow consists of four straightforward stages:
+        </p>
+
+        <div class="callout callout-warning" style="margin-top: 1rem; margin-bottom: 1.5rem;">
+          <div class="callout-title">Important Requirement: Gemini API Configuration for Search</div>
+          <p>
+            Configuring a personal Google Gemini API key is a <strong>mandatory installation step to use the project's AI-powered search and reasoning engine</strong>. While read-only inspection and local progress tracking work offline, question answering and coding solutions strictly require your own valid API key.
+          </p>
+        </div>
+
+        <div class="grid">
+          <div class="card">
+            <div class="card-icon">1</div>
+            <h3>Download Project</h3>
+            <p>Clone the GitHub repository using Git (recommended for <code>git pull</code> updates) or download the ZIP archive.</p>
+          </div>
+          <div class="card">
+            <div class="card-icon">2</div>
+            <h3>Install Dependencies</h3>
+            <p>Set up an isolated virtual environment (<code>.venv</code>) and install packages including AI extras: <code>pip install -e ".[ai]"</code>.</p>
+          </div>
+          <div class="card">
+            <div class="card-icon">3</div>
+            <h3>Configure Gemini API</h3>
+            <p><strong>Required for Search:</strong> Copy <code>.env.example</code> to <code>.env</code>, set <code>AI_PROVIDER=gemini</code>, and add your API key.</p>
+          </div>
+          <div class="card">
+            <div class="card-icon">4</div>
+            <h3>Install Browser</h3>
+            <p>Install Playwright's Chromium binary (<code>playwright install chromium</code>) and Linux system libraries.</p>
+          </div>
+          <div class="card">
+            <div class="card-icon">5</div>
+            <h3>Authenticate with CodeChef</h3>
+            <p>Log in manually to your CodeChef account in the opened headful browser using <code>course-automation auth</code>.</p>
+          </div>
+          <div class="card">
+            <div class="card-icon">6</div>
+            <h3>Verify Search Engine</h3>
+            <p>Run <code>course-automation config --check-ai</code> to confirm live Gemini API connection and model readiness.</p>
+          </div>
+        </div>
+
+        <h3>Downloading the Source Code (Git Clone vs. ZIP)</h3>
+        <p>
+          You can acquire the latest project code directly from the public GitHub repository at <a href="https://github.com/laveshbhati15-lgtm/course-automation" target="_blank" rel="noopener noreferrer" style="color: var(--accent-cyan); font-weight: 600;">github.com/laveshbhati15-lgtm/course-automation</a>:
+        </p>
+
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Method</th>
+                <th>Command or Link</th>
+                <th>Pros & Limitations</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Option A: Git Clone<br><span style="color: var(--accent-green); font-size: 0.8rem;">(Strongly Recommended)</span></strong></td>
+                <td><code>git clone https://github.com/laveshbhati15-lgtm/course-automation.git</code></td>
+                <td>Preserves full Git revision history. You can easily update to new releases and bug fixes with a single <code>git pull</code> command at any time.</td>
+              </tr>
+              <tr>
+                <td><strong>Option B: ZIP Download</strong></td>
+                <td><a href="https://github.com/laveshbhati15-lgtm/course-automation/archive/refs/heads/main.zip" target="_blank" rel="noopener noreferrer" style="color: var(--accent-cyan);">Download source code (.zip)</a></td>
+                <td>Helpful if Git is not installed. <em>Limitation:</em> Does not include Git metadata; <strong>you cannot run <code>git pull</code> to update</strong>. To update later, you must manually download, unpack, and reconfigure a new ZIP archive.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>Choose Your Platform Installation Guide</h3>
+        <p>Select your operating system to jump directly to dedicated, copy-paste terminal instructions:</p>
+
+        <div class="grid" style="margin-top: 1rem;">
+          <a href="#fedora-install" style="text-decoration: none; color: inherit;">
+            <div class="card" style="height: 100%; border-color: rgba(56, 189, 248, 0.4);">
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">
+                <span class="badge badge-verified">Dedicated Guide</span>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>
+              </div>
+              <h3 style="color: var(--accent-cyan);">Fedora Linux Guide</h3>
+              <p style="font-size: 0.9rem; margin-bottom: 0;">Complete beginner-friendly instructions using <code>dnf</code>, system libraries, Python virtual environments, and Playwright Chromium.</p>
+            </div>
+          </a>
+
+          <a href="#macos-install" style="text-decoration: none; color: inherit;">
+            <div class="card" style="height: 100%;">
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">
+                <span class="badge badge-verified">Verified</span>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.37c.62-.75 1.04-1.8 0.92-2.85-.9.04-2 .6-2.65 1.35-.58.66-1.09 1.73-.95 2.76 1.01.08 2.05-.51 2.68-1.26z"/></svg>
+              </div>
+              <h3>macOS Guide</h3>
+              <p style="font-size: 0.9rem; margin-bottom: 0;">Step-by-step setup using Homebrew for Python 3.12, avoiding default Xcode Python 3.9 issues.</p>
+            </div>
+          </a>
+
+          <a href="#windows-install" style="text-decoration: none; color: inherit;">
+            <div class="card" style="height: 100%;">
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">
+                <span class="badge badge-unverified">Unverified Host</span>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M0 3.449L9.75 2.1v9.451H0m10.949-9.602L24 0v11.4H10.949M0 12.6h9.75v9.451L0 20.699M10.949 12.6H24V24l-12.9-1.801"/></svg>
+              </div>
+              <h3>Windows Guide (PowerShell)</h3>
+              <p style="font-size: 0.9rem; margin-bottom: 0;">PowerShell setup bypassing execution policy restrictions safely for the current terminal session.</p>
+            </div>
+          </a>
         </div>
       </section>
 
@@ -244,6 +367,10 @@
               <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.37c.62-.75 1.04-1.8 0.92-2.85-.9.04-2 .6-2.65 1.35-.58.66-1.09 1.73-.95 2.76 1.01.08 2.05-.51 2.68-1.26z"/></svg>
               macOS
             </button>
+            <button class="tab-btn" data-tab="tab-fedora">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>
+              Fedora Linux
+            </button>
             <button class="tab-btn" data-tab="tab-windows">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M0 3.449L9.75 2.1v9.451H0m10.949-9.602L24 0v11.4H10.949M0 12.6h9.75v9.451L0 20.699M10.949 12.6H24V24l-12.9-1.801"/></svg>
               Windows 10/11 (PowerShell)
@@ -252,6 +379,7 @@
 
           <!-- macOS Tab Content -->
           <div class="tab-content active" id="tab-macos">
+            <span id="macos-install" style="position: relative; top: -100px;"></span>
             <div class="callout callout-info" style="margin-top: 0;">
               <div class="callout-title">Check Version First (Avoid macOS Default Python 3.9.6)</div>
               <p>Fresh Macs often provide Xcode Command Line Tools Python 3.9.6, which will fail. Check your version with <code>python3 --version</code>. If older than 3.10, install Python 3.12 via Homebrew.</p>
@@ -259,67 +387,132 @@
 
             <p><strong>Step 1: Install Python 3.12 & Git (via Homebrew)</strong></p>
             <div class="code-block">
-              <div class="code-header">
-                <span>bash</span>
-                <button class="copy-btn">Copy</button>
-              </div>
+              <div class="code-header"><span>bash</span><button class="copy-btn">Copy</button></div>
               <pre><code>brew install python@3.12 git
 python3.12 --version</code></pre>
             </div>
 
             <p><strong>Step 2: Clone & Enter Repository</strong></p>
             <div class="code-block">
-              <div class="code-header">
-                <span>bash</span>
-                <button class="copy-btn">Copy</button>
-              </div>
+              <div class="code-header"><span>bash</span><button class="copy-btn">Copy</button></div>
               <pre><code>git clone https://github.com/laveshbhati15-lgtm/course-automation.git
 cd course-automation</code></pre>
             </div>
 
             <p><strong>Step 3: Create & Activate Virtual Environment using Python 3.12</strong></p>
             <div class="code-block">
-              <div class="code-header">
-                <span>bash</span>
-                <button class="copy-btn">Copy</button>
-              </div>
+              <div class="code-header"><span>bash</span><button class="copy-btn">Copy</button></div>
               <pre><code>python3.12 -m venv .venv
 source .venv/bin/activate
 python --version</code></pre>
             </div>
 
-            <p><strong>Step 4: Upgrade Pip & Install Project</strong></p>
+            <p><strong>Step 4: Upgrade Pip & Install Dependencies (including AI search engine)</strong></p>
             <div class="code-block">
-              <div class="code-header">
-                <span>bash</span>
-                <button class="copy-btn">Copy</button>
-              </div>
+              <div class="code-header"><span>bash</span><button class="copy-btn">Copy</button></div>
               <pre><code>python3.12 -m pip install --upgrade pip
-pip install -e .</code></pre>
+pip install -e ".[ai]"</code></pre>
             </div>
 
-            <p><strong>Step 5: Install Playwright Chromium Browser</strong></p>
+            <p><strong>Step 5: Configure the Gemini API (Required for Search Engine)</strong></p>
+            <p>Copy the configuration template to <code>.env</code> and set your Gemini API key from <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" style="color: var(--accent-cyan);">Google AI Studio</a>:</p>
             <div class="code-block">
-              <div class="code-header">
-                <span>bash</span>
-                <button class="copy-btn">Copy</button>
-              </div>
+              <div class="code-header"><span>bash</span><button class="copy-btn">Copy</button></div>
+              <pre><code>cp .env.example .env
+# Edit .env and configure:
+#   AI_PROVIDER=gemini
+#   GEMINI_API_KEY=your_gemini_api_key_here
+#   GEMINI_MODEL=gemini-flash-lite-latest</code></pre>
+            </div>
+
+            <p><strong>Step 6: Install Playwright Chromium Browser</strong></p>
+            <div class="code-block">
+              <div class="code-header"><span>bash</span><button class="copy-btn">Copy</button></div>
               <pre><code>playwright install chromium</code></pre>
             </div>
 
-            <p><strong>Step 6: Verify CLI</strong></p>
+            <p><strong>Step 7: Authenticate with CodeChef</strong></p>
             <div class="code-block">
-              <div class="code-header">
-                <span>bash</span>
-                <button class="copy-btn">Copy</button>
-              </div>
-              <pre><code>course-automation --help
-course-automation config</code></pre>
+              <div class="code-header"><span>bash</span><button class="copy-btn">Copy</button></div>
+              <pre><code>course-automation auth --timeout 300</code></pre>
+            </div>
+
+            <p><strong>Step 8: Verify Search Engine & Configuration</strong></p>
+            <div class="code-block">
+              <div class="code-header"><span>bash</span><button class="copy-btn">Copy</button></div>
+              <pre><code>course-automation config --check-ai</code></pre>
+            </div>
+          </div>
+
+          <!-- Fedora Linux Tab Content -->
+          <div class="tab-content" id="tab-fedora">
+            <div class="callout callout-info" style="margin-top: 0;">
+              <div class="callout-title">Fedora Linux Quick Setup (Python 3.12+ Native)</div>
+              <p>Fedora 39, 40, and 41 include compatible Python 3.12/3.13 out of the box. Follow these steps in your terminal or read the comprehensive <a href="#fedora-install" style="color: var(--accent-cyan); font-weight: 600;">Fedora Beginner's Guide below</a>.</p>
+            </div>
+
+            <p><strong>Step 1: Install Python 3, DNF Tools & Git</strong></p>
+            <div class="code-block">
+              <div class="code-header"><span>bash</span><button class="copy-btn">Copy</button></div>
+              <pre><code>sudo dnf install -y git python3 python3-pip python3-devel
+python3 --version</code></pre>
+            </div>
+
+            <p><strong>Step 2: Clone & Enter Repository</strong></p>
+            <div class="code-block">
+              <div class="code-header"><span>bash</span><button class="copy-btn">Copy</button></div>
+              <pre><code>git clone https://github.com/laveshbhati15-lgtm/course-automation.git
+cd course-automation</code></pre>
+            </div>
+
+            <p><strong>Step 3: Create & Activate Virtual Environment</strong></p>
+            <div class="code-block">
+              <div class="code-header"><span>bash</span><button class="copy-btn">Copy</button></div>
+              <pre><code>python3 -m venv .venv
+source .venv/bin/activate</code></pre>
+            </div>
+
+            <p><strong>Step 4: Upgrade Pip & Install Dependencies (including AI search engine)</strong></p>
+            <div class="code-block">
+              <div class="code-header"><span>bash</span><button class="copy-btn">Copy</button></div>
+              <pre><code>python3 -m pip install --upgrade pip
+pip install -e ".[ai]"</code></pre>
+            </div>
+
+            <p><strong>Step 5: Configure the Gemini API (Required for Search Engine)</strong></p>
+            <p>Copy the template to <code>.env</code> and add your key from <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" style="color: var(--accent-cyan);">Google AI Studio</a>:</p>
+            <div class="code-block">
+              <div class="code-header"><span>bash</span><button class="copy-btn">Copy</button></div>
+              <pre><code>cp .env.example .env
+# Edit .env and configure:
+#   AI_PROVIDER=gemini
+#   GEMINI_API_KEY=your_gemini_api_key_here
+#   GEMINI_MODEL=gemini-flash-lite-latest</code></pre>
+            </div>
+
+            <p><strong>Step 6: Install Playwright Chromium & System Dependencies</strong></p>
+            <div class="code-block">
+              <div class="code-header"><span>bash</span><button class="copy-btn">Copy</button></div>
+              <pre><code>playwright install chromium
+playwright install-deps chromium</code></pre>
+            </div>
+
+            <p><strong>Step 7: Authenticate with CodeChef</strong></p>
+            <div class="code-block">
+              <div class="code-header"><span>bash</span><button class="copy-btn">Copy</button></div>
+              <pre><code>course-automation auth --timeout 300</code></pre>
+            </div>
+
+            <p><strong>Step 8: Verify Search Engine Setup</strong></p>
+            <div class="code-block">
+              <div class="code-header"><span>bash</span><button class="copy-btn">Copy</button></div>
+              <pre><code>course-automation config --check-ai</code></pre>
             </div>
           </div>
 
           <!-- Windows Tab Content -->
           <div class="tab-content" id="tab-windows">
+            <span id="windows-install" style="position: relative; top: -100px;"></span>
             <div class="callout callout-info">
               <div class="callout-title">Windows Prerequisites (Recommend Python 3.12)</div>
               <p>Install <strong>Python 3.12</strong> from <a href="https://www.python.org/downloads/" target="_blank" rel="noopener noreferrer" style="color: var(--accent-cyan);">python.org</a> (Ensure <strong>"Add python.exe to PATH"</strong> is checked) and <strong>Git for Windows</strong> from <a href="https://git-scm.com/download/win" target="_blank" rel="noopener noreferrer" style="color: var(--accent-cyan);">git-scm.com</a>. Verify with <code>python --version</code>.</p>
@@ -327,61 +520,344 @@ course-automation config</code></pre>
 
             <p><strong>Step 1: Clone Repository in PowerShell</strong></p>
             <div class="code-block">
-              <div class="code-header">
-                <span>powershell</span>
-                <button class="copy-btn">Copy</button>
-              </div>
+              <div class="code-header"><span>powershell</span><button class="copy-btn">Copy</button></div>
               <pre><code>git clone https://github.com/laveshbhati15-lgtm/course-automation.git
 cd course-automation</code></pre>
             </div>
 
             <p><strong>Step 2: Create Virtual Environment</strong></p>
             <div class="code-block">
-              <div class="code-header">
-                <span>powershell</span>
-                <button class="copy-btn">Copy</button>
-              </div>
+              <div class="code-header"><span>powershell</span><button class="copy-btn">Copy</button></div>
               <pre><code>python -m venv .venv</code></pre>
             </div>
             <p><em>(If you have multiple Python versions, use: <code>py -3.12 -m venv .venv</code>)</em></p>
 
             <p><strong>Step 3: Activate Safely (Bypassing Script Restrictions for this Session)</strong></p>
             <div class="code-block">
-              <div class="code-header">
-                <span>powershell</span>
-                <button class="copy-btn">Copy</button>
-              </div>
+              <div class="code-header"><span>powershell</span><button class="copy-btn">Copy</button></div>
               <pre><code>Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process
 .venv\Scripts\Activate.ps1</code></pre>
             </div>
 
-            <p><strong>Step 4: Upgrade Pip & Install Dependencies</strong></p>
+            <p><strong>Step 4: Upgrade Pip & Install Dependencies (including AI search engine)</strong></p>
             <div class="code-block">
-              <div class="code-header">
-                <span>powershell</span>
-                <button class="copy-btn">Copy</button>
-              </div>
+              <div class="code-header"><span>powershell</span><button class="copy-btn">Copy</button></div>
               <pre><code>python -m pip install --upgrade pip
-pip install -e .</code></pre>
+pip install -e ".[ai]"</code></pre>
             </div>
 
-            <p><strong>Step 5: Install Playwright Chromium Browser</strong></p>
+            <p><strong>Step 5: Configure the Gemini API (Required for Search Engine)</strong></p>
+            <p>Copy the template to <code>.env</code> and configure your Gemini API key:</p>
             <div class="code-block">
-              <div class="code-header">
-                <span>powershell</span>
-                <button class="copy-btn">Copy</button>
-              </div>
+              <div class="code-header"><span>powershell</span><button class="copy-btn">Copy</button></div>
+              <pre><code>Copy-Item .env.example .env
+# Open .env in Notepad and configure:
+#   AI_PROVIDER=gemini
+#   GEMINI_API_KEY=your_gemini_api_key_here
+#   GEMINI_MODEL=gemini-flash-lite-latest</code></pre>
+            </div>
+
+            <p><strong>Step 6: Install Playwright Chromium Browser</strong></p>
+            <div class="code-block">
+              <div class="code-header"><span>powershell</span><button class="copy-btn">Copy</button></div>
               <pre><code>playwright install chromium</code></pre>
             </div>
 
-            <p><strong>Step 6: Verify Installation</strong></p>
+            <p><strong>Step 7: Authenticate with CodeChef</strong></p>
             <div class="code-block">
-              <div class="code-header">
-                <span>powershell</span>
-                <button class="copy-btn">Copy</button>
+              <div class="code-header"><span>powershell</span><button class="copy-btn">Copy</button></div>
+              <pre><code>course-automation auth --timeout 300</code></pre>
+            </div>
+
+            <p><strong>Step 8: Verify Search Engine Setup</strong></p>
+            <div class="code-block">
+              <div class="code-header"><span>powershell</span><button class="copy-btn">Copy</button></div>
+              <pre><code>course-automation config --check-ai</code></pre>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Fedora Linux Complete Installation Guide -->
+      <section id="fedora-install">
+        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem;">
+          <h2>Fedora Linux Complete Installation Guide</h2>
+          <span class="badge badge-verified">Fedora 39 / 40 / 41 / 42</span>
+        </div>
+
+        <p>
+          This guide is written specifically for beginners who may be new to the Linux terminal. Follow each step sequentially to set up your environment, install dependencies using Fedora's DNF package manager, and launch the tool.
+        </p>
+
+        <div class="callout callout-info">
+          <div class="callout-title">Beginner Terminal Tip</div>
+          <p>Commands shown in dark boxes below are meant to be entered into your <strong>Terminal</strong> application. You can paste into most Linux terminals using <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>V</kbd> or right-clicking and selecting <em>Paste</em>.</p>
+        </div>
+
+        <h3>Step 1: Prerequisites & System Verification</h3>
+        <p>First, open your terminal. In GNOME (default Fedora desktop), press the <kbd>Super</kbd> (Windows) key, type <strong>Terminal</strong>, and press <kbd>Enter</kbd> (or use shortcut <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>T</kbd>).</p>
+
+        <p>Verify your Fedora version and system information:</p>
+        <div class="code-block">
+          <div class="code-header"><span>bash</span><button class="copy-btn">Copy</button></div>
+          <pre><code>cat /etc/os-release</code></pre>
+        </div>
+        <p>Check your installed Python version. The project strictly requires <strong>Python &gt;= 3.10</strong> (Python 3.12 is recommended and ships standard with Fedora 39/40):</p>
+        <div class="code-block">
+          <div class="code-header"><span>bash</span><button class="copy-btn">Copy</button></div>
+          <pre><code>python3 --version</code></pre>
+        </div>
+        <p>Check if Git is installed:</p>
+        <div class="code-block">
+          <div class="code-header"><span>bash</span><button class="copy-btn">Copy</button></div>
+          <pre><code>git --version</code></pre>
+        </div>
+
+        <h3>Step 2: Install Required System Packages via DNF</h3>
+        <p>
+          Fedora uses the <code>dnf</code> package manager. The <code>sudo</code> command executes the operation with administrative privileges; you will be prompted for your user password (characters will not show on screen as you type, which is normal).
+        </p>
+        <div class="code-block">
+          <div class="code-header"><span>bash</span><button class="copy-btn">Copy</button></div>
+          <pre><code>sudo dnf install -y git python3 python3-pip python3-devel</code></pre>
+        </div>
+        <ul style="color: var(--text-muted); margin-left: 1.5rem; margin-bottom: 1.5rem; line-height: 1.8;">
+          <li><code>git</code>: Downloads and tracks the project from GitHub.</li>
+          <li><code>python3</code>: The Python 3 programming language runtime.</li>
+          <li><code>python3-pip</code>: Python package manager for installing project dependencies.</li>
+          <li><code>python3-devel</code>: C header files and libraries needed to build native extensions.</li>
+        </ul>
+
+        <h3>Step 3: Download the Project (Clone Repository)</h3>
+        <p>
+          "Cloning" creates an identical, full copy of the project repository on your machine. Run:
+        </p>
+        <div class="code-block">
+          <div class="code-header"><span>bash</span><button class="copy-btn">Copy</button></div>
+          <pre><code>git clone https://github.com/laveshbhati15-lgtm/course-automation.git
+cd course-automation</code></pre>
+        </div>
+        <p>Confirm that you are inside the project directory by checking your current folder and listing its contents:</p>
+        <div class="code-block">
+          <div class="code-header"><span>bash</span><button class="copy-btn">Copy</button></div>
+          <pre><code>pwd
+ls</code></pre>
+        </div>
+        <p>You should see files such as <code>pyproject.toml</code>, <code>README.md</code>, <code>src</code>, and <code>docs</code>.</p>
+
+        <h3>Step 4: Create & Activate a Python Virtual Environment</h3>
+        <p>
+          In modern Linux distributions (including Fedora), Python packages should always be installed inside a <strong>virtual environment</strong> rather than globally. This prevents conflicts with system packages and avoids <code>externally-managed-environment</code> errors:
+        </p>
+        <div class="code-block">
+          <div class="code-header"><span>bash</span><button class="copy-btn">Copy</button></div>
+          <pre><code>python3 -m venv .venv
+source .venv/bin/activate</code></pre>
+        </div>
+        <p>
+          <em>How to verify activation:</em> Your terminal prompt will now start with <code>(.venv)</code>, indicating that all subsequent Python and pip commands will run in this isolated environment.
+        </p>
+
+        <h3>Step 5: Upgrade Pip & Install Dependencies (including AI Search Engine)</h3>
+        <p>With <code>(.venv)</code> active, upgrade pip and install the package with AI search extras enabled:</p>
+        <div class="code-block">
+          <div class="code-header"><span>bash</span><button class="copy-btn">Copy</button></div>
+          <pre><code>python3 -m pip install --upgrade pip
+pip install -e ".[ai]"</code></pre>
+        </div>
+        <p style="color: var(--text-muted); font-size: 0.9rem;">
+          <em>Note: Installing <code>.[ai]</code> installs <code>google-genai</code>, the client library powering the Gemini search and reasoning engine.</em>
+        </p>
+
+        <h3>Step 6: Configure the Gemini API (Required for Search Engine)</h3>
+        <div class="callout callout-warning">
+          <div class="callout-title">Mandatory Step for Search & Deduction Features</div>
+          <p>
+            Configuring the Gemini API is a <strong>mandatory installation step</strong> if you plan to use the AI-powered search and deduction engine (answering quizzes, MCQs, and coding challenges). While non-API commands like <code>auth</code>, <code>inspect</code>, and <code>status</code> work without a key, the search engine requires a valid personal Gemini key.
+          </p>
+        </div>
+        <p>Follow these steps to configure your environment securely on Fedora:</p>
+        <ol style="color: var(--text-muted); margin-left: 1.5rem; margin-bottom: 1.5rem; line-height: 1.8;">
+          <li>Obtain a personal API key from <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" style="color: var(--accent-cyan); font-weight: 600;">Google AI Studio</a>.</li>
+          <li>Copy the repository template to create your local <code>.env</code> file:
+            <div class="code-block" style="margin-top: 0.5rem; margin-bottom: 0.5rem;">
+              <div class="code-header"><span>bash</span><button class="copy-btn">Copy</button></div>
+              <pre><code>cp .env.example .env</code></pre>
+            </div>
+          </li>
+          <li>Edit <code>.env</code> using your favorite text editor (e.g. <code>nano .env</code> or <code>gedit .env</code>):
+            <div class="code-block" style="margin-top: 0.5rem; margin-bottom: 0.5rem;">
+              <div class="code-header"><span>env</span><button class="copy-btn">Copy</button></div>
+              <pre><code># AI Search Engine Configuration (Required for MCQs and Code Reasoning)
+AI_PROVIDER=gemini
+GEMINI_API_KEY=your_gemini_api_key_here
+GEMINI_MODEL=gemini-flash-lite-latest</code></pre>
+            </div>
+          </li>
+          <li>
+            <strong>Configuration Details:</strong>
+            <ul style="margin-left: 1rem; margin-top: 0.3rem;">
+              <li><code>AI_PROVIDER=gemini</code>: The project defaults to <code>none</code>. You <strong>must</strong> explicitly specify <code>gemini</code> to activate the AI search engine.</li>
+              <li><code>GEMINI_API_KEY</code>: Your secret API key from Google AI Studio. Never share or commit this key.</li>
+              <li><code>GEMINI_MODEL</code>: Defaults to <code>gemini-flash-lite-latest</code>.</li>
+            </ul>
+          </li>
+        </ol>
+        <div class="callout callout-info" style="margin-top: -0.5rem;">
+          <div class="callout-title">Security & Git Tracking Confirmation</div>
+          <p>
+            The project configuration engine (Pydantic Settings) automatically loads <code>.env</code> on startup. The <code>.env</code> file is strictly excluded from Git tracking via <code>.gitignore</code> (line 70), ensuring your secret key is never accidentally committed or pushed.
+          </p>
+        </div>
+
+        <h3>Step 7: Install Browser Dependencies (Playwright & DNF Libraries)</h3>
+        <p>Install Playwright's Chromium browser binary:</p>
+        <div class="code-block">
+          <div class="code-header"><span>bash</span><button class="copy-btn">Copy</button></div>
+          <pre><code>playwright install chromium</code></pre>
+        </div>
+
+        <p>
+          On Linux, Chromium requires system shared libraries (such as graphics, font, and audio packages). Install the required system dependencies:
+        </p>
+        <div class="code-block">
+          <div class="code-header"><span>bash</span><button class="copy-btn">Copy</button></div>
+          <pre><code>playwright install-deps chromium</code></pre>
+        </div>
+        <p><em>(Playwright will ask for your <code>sudo</code> password to install any missing DNF packages automatically. If you prefer to install them manually, run: <code>sudo dnf install -y alsa-lib at-spi2-atk cairo cups-libs dbus-libs expat glib2 gtk3 libX11 libXcomposite libXdamage libXext libXfixes libXrandr libdrm libgbm libxcb libxshmfence mesa-libgbm nss nspr pango</code>.)</em></p>
+
+        <h3>Step 8: Authenticate with CodeChef</h3>
+        <p>
+          Authenticate once using the headful browser to create your persistent session:
+        </p>
+        <div class="code-block">
+          <div class="code-header"><span>bash</span><button class="copy-btn">Copy</button></div>
+          <pre><code>course-automation auth --timeout 300</code></pre>
+        </div>
+        <ol style="color: var(--text-muted); margin-left: 1.5rem; margin-bottom: 1.5rem; line-height: 1.8;">
+          <li>A visible Chromium browser window will open to <code>https://www.codechef.com/login</code>.</li>
+          <li><strong>You must manually log in</strong> inside this browser window using your CodeChef username/password, Google OAuth, or GitHub.</li>
+          <li>The CLI polls your open browser tabs for authenticated course indicators and session cookies.</li>
+          <li>Once detected, the terminal prints <code>[SUCCESS] Authentication detected! Session saved to profile.</code> and closes the browser cleanly.</li>
+        </ol>
+
+        <div class="callout callout-warning">
+          <div class="callout-title">Troubleshooting Browser Login on Fedora</div>
+          <p>
+            If you sign in successfully in the browser but the CLI continues waiting and eventually times out:
+          </p>
+          <ul style="margin-left: 1.5rem; margin-top: 0.5rem; line-height: 1.8;">
+            <li><strong>OAuth Multi-tab:</strong> Google or GitHub OAuth may open your authenticated session in a new tab. Keep the browser open and make sure you navigate to your course URL (e.g. <code>https://www.codechef.com/learn/course/&lt;slug&gt;</code>) so the detector can identify course elements.</li>
+            <li><strong>Do Not Close Manually:</strong> Allow the CLI to detect the session and exit automatically.</li>
+            <li><strong>Extend Timeout:</strong> If your login takes longer, run: <code>course-automation auth --timeout 600</code>.</li>
+            <li><strong>Diagnostic Logs:</strong> Collect sanitized logs without exposing credentials: <code>LOG_LEVEL=DEBUG course-automation auth --timeout 300</code>.</li>
+          </ul>
+        </div>
+
+        <h3>Step 9: Verify Your Search Engine Setup</h3>
+        <p>Do not assume the search engine is configured simply because the CLI launches. Run this dedicated, non-destructive health check to verify your Gemini API key and model connectivity:</p>
+        <div class="code-block">
+          <div class="code-header"><span>bash</span><button class="copy-btn">Copy</button></div>
+          <pre><code>course-automation config --check-ai</code></pre>
+        </div>
+        <p><strong>Expected Output:</strong></p>
+        <div class="code-block">
+          <div class="code-header"><span>terminal</span></div>
+          <pre><code>[AI Check] Testing Gemini API connection...
+[AI Check] Gemini search & reasoning engine connected successfully!
+  Model: gemini-flash-lite-latest
+  Ping response: pong</code></pre>
+        </div>
+
+        <p>You can also check resolved local configuration paths and settings:</p>
+        <div class="code-block">
+          <div class="code-header"><span>bash</span><button class="copy-btn">Copy</button></div>
+          <pre><code>course-automation config</code></pre>
+        </div>
+
+        <div class="callout callout-info" style="margin-top: 1rem;">
+          <div class="callout-title">Understanding API Limits & Common Errors</div>
+          <ul style="margin-left: 1.5rem; margin-top: 0.5rem; line-height: 1.8;">
+            <li><strong>API Limits & Quotas:</strong> Free and pay-as-you-go tiers in Google AI Studio have per-minute and per-day rate limits. Usage is not unlimited.</li>
+            <li><strong>Missing API Key:</strong> If <code>GEMINI_API_KEY</code> is unset or empty, running <code>solve</code> on MCQs will stop with: <code>RuntimeError: GEMINI_API_KEY is not set.</code></li>
+            <li><strong>Invalid Key (400 / 403):</strong> If the key is corrupted or revoked, the check outputs <code>Gemini ping failed: API_KEY_INVALID</code>. Double-check your key in <code>.env</code>.</li>
+            <li><strong>Quota Exhaustion (429):</strong> If you encounter <code>ResourceExhausted / 429</code>, wait a minute for your quota window to reset or upgrade your tier in Google AI Studio.</li>
+          </ul>
+        </div>
+
+        <h3>Step 10: Common Fedora Troubleshooting</h3>
+        <div class="accordion" style="margin-top: 1rem;">
+          <div class="accordion-item">
+            <button class="accordion-trigger">
+              <span>Fedora 1. Python Version Error (<code>requires-python &gt;= 3.10</code>)</span>
+              <span class="accordion-icon">▼</span>
+            </button>
+            <div class="accordion-content">
+              <p><strong>Cause:</strong> You are running an older Fedora release (e.g. Fedora 38 or older) with Python 3.9.</p>
+              <p><strong>Solution:</strong> Install Python 3.12 explicitly and recreate your environment:</p>
+              <div class="code-block">
+                <div class="code-header"><span>bash</span><button class="copy-btn">Copy</button></div>
+                <pre><code>sudo dnf install -y python3.12 python3.12-devel
+rm -rf .venv
+python3.12 -m venv .venv
+source .venv/bin/activate
+pip install -e .</code></pre>
               </div>
-              <pre><code>course-automation --help
-course-automation config</code></pre>
+            </div>
+          </div>
+
+          <div class="accordion-item">
+            <button class="accordion-trigger">
+              <span>Fedora 2. Pip Error: <code>externally-managed-environment</code></span>
+              <span class="accordion-icon">▼</span>
+            </button>
+            <div class="accordion-content">
+              <p><strong>Cause:</strong> Running <code>pip install</code> directly against Fedora's system Python without activating <code>.venv</code>.</p>
+              <p><strong>Solution:</strong> Always activate your virtual environment first: <code>source .venv/bin/activate</code>. The prompt will show <code>(.venv)</code>.</p>
+            </div>
+          </div>
+
+          <div class="accordion-item">
+            <button class="accordion-trigger">
+              <span>Fedora 3. Git or Network Connection Failures</span>
+              <span class="accordion-icon">▼</span>
+            </button>
+            <div class="accordion-content">
+              <p><strong>Symptom:</strong> <code>fatal: unable to access 'https://github.com/...': Could not resolve host</code>.</p>
+              <p><strong>Solution:</strong> Verify your internet connection with <code>ping -c 3 fedoraproject.org</code>. If you are behind a university or corporate proxy, configure Git proxy settings or download the source code ZIP archive directly.</p>
+            </div>
+          </div>
+
+          <div class="accordion-item">
+            <button class="accordion-trigger">
+              <span>Fedora 4. Playwright / Chromium Missing Library Errors</span>
+              <span class="accordion-icon">▼</span>
+            </button>
+            <div class="accordion-content">
+              <p><strong>Symptom:</strong> <code>Host system is missing dependencies to run browsers</code>.</p>
+              <p><strong>Solution:</strong> Run <code>playwright install-deps chromium</code> to install missing RPM libraries. On Wayland desktops, ensure XWayland compatibility is installed: <code>sudo dnf install -y xorg-x11-server-Xwayland</code>.</p>
+            </div>
+          </div>
+
+          <div class="accordion-item">
+            <button class="accordion-trigger">
+              <span>Fedora 5. Permission Denied on <code>~/.course_automation</code></span>
+              <span class="accordion-icon">▼</span>
+            </button>
+            <div class="accordion-content">
+              <p><strong>Symptom:</strong> <code>sqlite3.OperationalError: unable to open database file</code>.</p>
+              <p><strong>Solution:</strong> Restore ownership of your user data directory: <code>sudo chown -R $USER:$USER ~/.course_automation</code>.</p>
+            </div>
+          </div>
+
+          <div class="accordion-item">
+            <button class="accordion-trigger">
+              <span>Fedora 6. Missing Dependencies for Running Tests</span>
+              <span class="accordion-icon">▼</span>
+            </button>
+            <div class="accordion-content">
+              <p><strong>Symptom:</strong> <code>ModuleNotFoundError: No module named 'pytest'</code> when running tests.</p>
+              <p><strong>Solution:</strong> Install the development dependencies inside your activated virtual environment: <code>pip install -e ".[dev]"</code> and run <code>pytest -v</code>.</p>
             </div>
           </div>
         </div>
@@ -410,12 +886,12 @@ course-automation config</code></pre>
               <tr>
                 <td><code>pip install -e ".[dev]"</code></td>
                 <td>Development & Testing</td>
-                <td>For developers and running the 67 automated tests (includes <code>pytest</code>, <code>pytest-mock</code>, <code>google-genai</code>).</td>
+                <td>For developers and running the 76 automated tests (includes <code>pytest</code>, <code>pytest-mock</code>, <code>google-genai</code>).</td>
               </tr>
               <tr>
                 <td><code>pip install -e ".[ai]"</code></td>
-                <td>Optional AI Reasoning</td>
-                <td>Installs Google Gemini SDK (<code>google-genai</code>) for MCQ reasoning assistance.</td>
+                <td>AI Search & Reasoning Engine</td>
+                <td>Installs Google Gemini SDK (<code>google-genai</code>) required for AI-powered search & reasoning engine.</td>
               </tr>
               <tr>
                 <td><code>playwright install chromium</code></td>
@@ -431,10 +907,13 @@ course-automation config</code></pre>
       <section id="auth-session">
         <h2>Authentication & Browser Session Handling</h2>
         <p>
-          Course Automation uses a persistent local browser profile to maintain your logged-in state without storing your plaintext username or password.
+          Course Automation uses an isolated persistent browser profile to maintain your logged-in state across CLI runs without storing your plaintext username or password.
         </p>
 
-        <h3>One-Time Login Command</h3>
+        <h3>Interactive Manual Login Command</h3>
+        <p>
+          To authenticate, launch a visible (headful) browser window from your terminal:
+        </p>
         <div class="code-block">
           <div class="code-header">
             <span>bash</span>
@@ -442,10 +921,35 @@ course-automation config</code></pre>
           </div>
           <pre><code>course-automation auth</code></pre>
         </div>
+
+        <p>
+          By default, the CLI waits up to <strong>300 seconds</strong> for you to complete login. If you need more time (for two-factor authentication or slower connections), pass the <code>--timeout</code> option:
+        </p>
+        <div class="code-block">
+          <div class="code-header">
+            <span>bash</span>
+            <button class="copy-btn">Copy</button>
+          </div>
+          <pre><code>course-automation auth --timeout 600</code></pre>
+        </div>
+
+        <div class="callout callout-info">
+          <div class="callout-title">Supported CLI Options for <code>auth</code></div>
+          <p>The <code>auth</code> command supports the following options:</p>
+          <ul style="margin-left: 1.5rem; margin-top: 0.5rem; line-height: 1.8;">
+            <li><code>--timeout &lt;int&gt;</code>: Maximum wait time in seconds for manual login (default: <code>300</code>).</li>
+            <li><code>--site &lt;str&gt;</code>: Target learning platform (default: <code>codechef</code>).</li>
+            <li><code>--help</code>: Display command usage information.</li>
+          </ul>
+          <p style="margin-top: 0.5rem;"><em>Note: Unsupported flags such as <code>--manual</code> do not exist. Authentication is always interactive and headful.</em></p>
+        </div>
+
+        <h3>How the Authentication Workflow Works</h3>
         <ol style="color: var(--text-muted); margin-left: 1.5rem; margin-bottom: 1.5rem; line-height: 1.8;">
-          <li>A headful Chromium window opens to the CodeChef login page.</li>
-          <li>Log in manually via your preferred provider (Email/Password, Google OAuth, GitHub).</li>
-          <li>The CLI detects successful login, caches cookies, and exits cleanly.</li>
+          <li><strong>Browser Launch:</strong> A visible (headful) Chromium window opens automatically to the CodeChef login page.</li>
+          <li><strong>Manual Login:</strong> You must <strong>manually enter your credentials or sign in</strong> using your preferred identity provider (CodeChef username/password, Google OAuth, or GitHub) directly in the opened browser window. The CLI does not read, intercept, or enter your credentials.</li>
+          <li><strong>Session Detection:</strong> As you sign in, the CLI monitors open browser tabs for authenticated course indicators (such as user avatar elements, course syllabus cards, and session cookies).</li>
+          <li><strong>Profile Persistence:</strong> Once authenticated state is verified, the CLI prints <code>[SUCCESS] Authentication detected! Session saved to profile.</code> and disconnects the browser cleanly, persisting your session.</li>
         </ol>
 
         <div class="callout callout-danger">
@@ -464,30 +968,82 @@ course-automation config</code></pre>
 
       <!-- Configuration & Gemini API Setup -->
       <section id="config-ai">
-        <h2>Configuration & Gemini API Setup</h2>
-        <p>
-          The core application runs without an API key for login, course inspection, theory reading, and local progress tracking. A personal Gemini API key and the AI dependencies (<code>google-genai</code>) are required for AI-powered reasoning on quiz questions and generating coding solutions. Students who want automated question-answering functionality must complete the Gemini setup below before using that feature.
-        </p>
+        <h2>Configuration & Gemini API Setup (Required for Search Engine)</h2>
+        <div class="callout callout-warning" style="margin-top: 0.5rem; margin-bottom: 1.5rem;">
+          <div class="callout-title">Mandatory Requirement for AI-Powered Search</div>
+          <p>
+            Configuring a personal Google Gemini API key is a <strong>required installation step</strong> to access the project's AI-powered search and reasoning engine. Without a valid API key, the search engine cannot evaluate question prompts, search lesson context, or synthesize code solutions.
+          </p>
+        </div>
+
+        <h3>Feature Breakdown: Required vs. Non-API Features</h3>
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Feature / CLI Command</th>
+                <th>API Key Required?</th>
+                <th>Behavior Without API Key</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>AI Search & Question Answering</strong> (<code>course-automation solve</code>)</td>
+                <td><span class="badge badge-verified">Required</span></td>
+                <td>Skipped; reports <code>INSPECTED_NO_AI</code> on quizzes and coding labs.</td>
+              </tr>
+              <tr>
+                <td><strong>Automated Code Generation</strong> (<code>course-automation solve --coding-only</code>)</td>
+                <td><span class="badge badge-verified">Required</span></td>
+                <td>Inspects problem statements but cannot synthesize code solutions without Gemini.</td>
+              </tr>
+              <tr>
+                <td><strong>Interactive One-Time Login</strong> (<code>course-automation auth</code>)</td>
+                <td><span class="badge badge-supported">Not Required</span></td>
+                <td>Fully functional; saves session cookies in <code>~/.course_automation/browser_profile</code>.</td>
+              </tr>
+              <tr>
+                <td><strong>Syllabus Inspection & Progress</strong> (<code>course-automation inspect</code>)</td>
+                <td><span class="badge badge-supported">Not Required</span></td>
+                <td>Fully functional; parses curriculum structure and completion percentages offline.</td>
+              </tr>
+              <tr>
+                <td><strong>Assisted Theory Reading</strong> (<code>course-automation solve --theory-only</code>)</td>
+                <td><span class="badge badge-supported">Not Required</span></td>
+                <td>Fully functional; reads lessons, renders LaTeX, and clicks enabled <code>Next</code> buttons.</td>
+              </tr>
+              <tr>
+                <td><strong>Offline Local Progress History</strong> (<code>course-automation status</code>)</td>
+                <td><span class="badge badge-supported">Not Required</span></td>
+                <td>Fully functional; queries cached local SQLite database without network or API calls.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
 
         <div class="callout callout-info">
-          <div class="callout-title">Architecture Note: Prompt Reasoning vs Web Search</div>
-          <p>Question answering and code generation use Google Gemini (<code>gemini-flash-lite-latest</code> via the <code>google-genai</code> SDK) for direct structured reasoning over question prompts and lesson context. There is <strong>no separate web search provider or <code>search.answer</code> endpoint</strong> in this project.</p>
+          <div class="callout-title">Architecture Note: How the AI Search Engine Operates</div>
+          <p>
+            The project's AI search engine uses Google Gemini (<code>gemini-flash-lite-latest</code> via the official <code>google-genai</code> SDK) to perform structured conceptual search, semantic deduction, and solution synthesis directly across lesson context, theorem definitions, and question prompts. There is <strong>no separate third-party web search provider or external <code>search.answer</code> endpoint</strong>.
+          </p>
         </div>
 
         <h3>Step 1: Obtain Your Personal Google Gemini API Key</h3>
         <ol style="color: var(--text-muted); margin-left: 1.5rem; margin-bottom: 1.5rem; line-height: 1.8;">
-          <li>Visit <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" style="color: var(--accent-cyan);">Google AI Studio</a>.</li>
+          <li>Visit <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" style="color: var(--accent-cyan); font-weight: 600;">Google AI Studio (aistudio.google.com/app/apikey)</a>.</li>
           <li>Sign in with your personal Google account.</li>
-          <li>Click <strong>Create API Key</strong> and copy your key.</li>
+          <li>Click <strong>Create API Key</strong>, select or create a project, and copy your generated key.</li>
         </ol>
 
         <div class="callout callout-warning">
-          <div class="callout-title">Student Responsibility & Quota Notice</div>
-          <p>Each student must configure their <strong>own personal API key</strong>. Never share your key with classmates or commit it to GitHub. The default model <code>gemini-flash-lite-latest</code> is eligible for Google's developer free tier, but usage is subject to rate limits and quotas. The project maintainers do not supply, subsidize, or guarantee free or unlimited API access.</p>
+          <div class="callout-title">Personal Responsibility & Quota Limits</div>
+          <p>
+            Each user must configure their <strong>own personal API key</strong>. Never share your key with classmates or commit it to GitHub. Google AI Studio provides a free developer tier with rate limits (Requests Per Minute / Requests Per Day). Usage availability and quotas depend entirely on your Google AI Studio account. The project maintainers do not supply, subsidize, or guarantee unlimited API quotas.
+          </p>
         </div>
 
         <h3>Step 2: Create Your Local <code>.env</code> File</h3>
-        <p>In the project root directory, copy the provided template:</p>
+        <p>In your project root directory, copy the provided template:</p>
         <p><strong>macOS / Linux:</strong></p>
         <div class="code-block">
           <div class="code-header"><span>bash</span><button class="copy-btn">Copy</button></div>
@@ -499,34 +1055,75 @@ course-automation config</code></pre>
           <pre><code>Copy-Item .env.example .env</code></pre>
         </div>
 
-        <h3>Step 3: Edit <code>.env</code> with Your Key</h3>
-        <p>Open <code>.env</code> in any text editor and configure your settings using placeholder syntax (never paste real keys into public files):</p>
+        <h3>Step 3: Configure Required Environment Variables in <code>.env</code></h3>
+        <p>
+          Open <code>.env</code> in your text editor. By default, <code>AI_PROVIDER</code> is set to <code>none</code>. <strong>You must explicitly set <code>AI_PROVIDER=gemini</code></strong> and supply your API key:
+        </p>
         <div class="code-block">
           <div class="code-header"><span>env</span><button class="copy-btn">Copy</button></div>
-          <pre><code>AI_PROVIDER=gemini
+          <pre><code># Enable the Gemini search & reasoning provider (REQUIRED for search functionality)
+AI_PROVIDER=gemini
+
+# Your personal Gemini API key from Google AI Studio (supports GEMINI_API_KEY or GOOGLE_API_KEY)
 GEMINI_API_KEY=your_gemini_api_key_here
+
+# Default Gemini model used for search and question solving
 GEMINI_MODEL=gemini-flash-lite-latest</code></pre>
+        </div>
+        <p><em>Note: Pydantic Settings automatically loads <code>.env</code> and <code>.env.local</code> on startup.</em></p>
+
+        <div class="callout callout-danger">
+          <div class="callout-title">Git Secret Hygiene Verified</div>
+          <p>
+            Your local <code>.env</code> and <code>.env.local</code> files are strictly excluded from Git tracking via <code>.gitignore</code> (line 70). Running <code>git status</code> will never stage your credentials. <strong>Never paste or commit real API keys</strong> into tracked code or example files.
+          </p>
         </div>
 
         <h3>Step 4: Install AI Dependencies</h3>
-        <p>Ensure the <code>google-genai</code> SDK is installed in your active virtual environment:</p>
+        <p>Ensure the official <code>google-genai</code> SDK is installed in your active virtual environment:</p>
         <div class="code-block">
           <div class="code-header"><span>bash</span><button class="copy-btn">Copy</button></div>
           <pre><code>pip install -e ".[ai]"</code></pre>
         </div>
 
-        <h3>Step 5: Verify That Configuration is Loaded</h3>
-        <p>Run the diagnostic command to confirm that your key is detected and automatically redacted:</p>
+        <h3 id="verify-search">Step 5: Verify Your Search Engine Setup</h3>
+        <p>
+          Do not assume the API is working merely because the CLI opens. Use these safe, non-destructive commands to confirm that your search engine is configured and operational:
+        </p>
+
+        <p><strong>1. Inspect Resolved Configuration:</strong></p>
         <div class="code-block">
           <div class="code-header"><span>bash</span><button class="copy-btn">Copy</button></div>
           <pre><code>course-automation config</code></pre>
         </div>
-        <p style="margin-top: 0.5rem; font-size: 0.88rem;">Expected output: <code>AI Provider: gemini</code>, <code>Gemini Model: gemini-flash-lite-latest</code>, and <code>Gemini API Key: [SET (REDACTED)]</code>. If it displays <code>[NOT SET]</code>, check that <code>.env</code> is in the project root.</p>
+        <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 1rem;">
+          Expected: <code>AI Provider: gemini</code>, <code>Gemini Model: gemini-flash-lite-latest</code>, and <code>Gemini API Key: [SET (REDACTED)]</code>. If it says <code>[NOT SET]</code>, verify that <code>.env</code> exists in the project root.
+        </p>
 
-        <div class="callout callout-danger">
-          <div class="callout-title">Git Secret Hygiene</div>
-          <p>Your local <code>.env</code> and <code>.env.local</code> files are strictly excluded by <code>.gitignore</code>. Running <code>git status</code> will never show your <code>.env</code> file. Never hardcode real keys into tracked code.</p>
+        <p><strong>2. Test Live Gemini API Connection (Health Check):</strong></p>
+        <div class="code-block">
+          <div class="code-header"><span>bash</span><button class="copy-btn">Copy</button></div>
+          <pre><code>course-automation config --check-ai</code></pre>
         </div>
+        <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 1rem;">
+          Sends a lightweight non-destructive ping to Google AI Studio. Output on success: <code style="color: var(--accent-green);">✓ Gemini API search engine verified successfully (gemini-flash-lite-latest)!</code>
+        </p>
+
+        <p><strong>3. Non-Destructive Search Simulation (Dry-Run):</strong></p>
+        <div class="code-block">
+          <div class="code-header"><span>bash</span><button class="copy-btn">Copy</button></div>
+          <pre><code>course-automation solve &lt;COURSE_URL&gt; --dry-run</code></pre>
+        </div>
+        <p style="font-size: 0.88rem; color: var(--text-muted);">
+          Runs the full AI search engine to analyze question prompts, extract options, and compute answers, but **does not click options or submit answers** on CodeChef servers.
+        </p>
+
+        <h3>API Limits, Quotas & Error Recognition</h3>
+        <ul style="color: var(--text-muted); margin-left: 1.5rem; margin-bottom: 1.5rem; line-height: 1.8;">
+          <li><strong>Missing Key Error (<code>ValueError: GEMINI_API_KEY is not set</code>):</strong> Occurs if <code>AI_PROVIDER=gemini</code> but <code>GEMINI_API_KEY</code> is blank. Solution: Add your key to <code>.env</code>.</li>
+          <li><strong>Invalid Key Error (<code>400 API_KEY_INVALID</code> or <code>403 PERMISSION_DENIED</code>):</strong> Occurs if the key was revoked or mistyped. Solution: Generate a fresh key at Google AI Studio.</li>
+          <li><strong>Quota / Rate Limit Error (<code>429 RESOURCE_EXHAUSTED</code>):</strong> Occurs if the free tier request limit is reached. Solution: Wait 60 seconds before retrying, or switch to reading lessons via <code>--theory-only</code>.</li>
+        </ul>
       </section>
 
       <!-- CLI Usage & Examples -->
@@ -632,7 +1229,58 @@ GEMINI_MODEL=gemini-flash-lite-latest</code></pre>
 
           <div class="accordion-item">
             <button class="accordion-trigger">
-              <span>3. Windows PowerShell: Script Execution Disabled (<code>PSSecurityException</code>)</span>
+              <span>3. Login Succeeds in Browser but CLI Keeps Waiting and Times Out</span>
+              <span class="accordion-icon">▼</span>
+            </button>
+            <div class="accordion-content">
+              <p><strong>Symptom:</strong> You manually log in to CodeChef in the opened browser window and the course or dashboard is visibly displayed, but the terminal continues waiting and eventually reports: <code>Authentication was not completed within the time limit.</code></p>
+
+              <p><strong>Potential Causes:</strong></p>
+              <ul style="color: var(--text-muted); margin-left: 1.5rem; margin-bottom: 1rem; line-height: 1.8;">
+                <li><strong>Multi-tab / OAuth redirection:</strong> Signing in via Google or GitHub OAuth may open a popup or redirect in a new tab, leaving the initial tab on an intermediate URL while the course loads in another tab.</li>
+                <li><strong>Course page not loaded:</strong> The browser remained on an account settings, payment, or home page rather than an active course or learning dashboard.</li>
+                <li><strong>Browser window closed prematurely:</strong> Closing the browser before the CLI confirms authentication interrupts session verification.</li>
+              </ul>
+
+              <p><strong>Recommended Actions:</strong></p>
+              <ol style="color: var(--text-muted); margin-left: 1.5rem; margin-bottom: 1rem; line-height: 1.8;">
+                <li><strong>Keep the browser open:</strong> Do not close the Chromium browser manually. The tool will automatically close it and save the session once authentication is verified.</li>
+                <li><strong>Navigate to your course:</strong> If redirected to the home page or a blank tab, navigate directly to your course (e.g. <code>https://www.codechef.com/learn/course/...</code>) so the detector can identify course elements.</li>
+                <li><strong>Extend the timeout:</strong> If your login flow or 2FA requires more time, increase the timeout:
+                  <div class="code-block" style="margin-top: 0.5rem; margin-bottom: 0.5rem;">
+                    <div class="code-header"><span>bash</span><button class="copy-btn">Copy</button></div>
+                    <pre><code>course-automation auth --timeout 600</code></pre>
+                  </div>
+                </li>
+              </ol>
+
+              <p><strong>How to Collect Safe Diagnostic Logs:</strong></p>
+              <p>To inspect what the detector sees during authentication without leaking any secrets, run the command with debug logging enabled:</p>
+              <div class="code-block">
+                <div class="code-header"><span>macOS / Linux</span><button class="copy-btn">Copy</button></div>
+                <pre><code>LOG_LEVEL=DEBUG course-automation auth --timeout 300</code></pre>
+              </div>
+              <div class="code-block" style="margin-top: 0.75rem;">
+                <div class="code-header"><span>Windows PowerShell</span><button class="copy-btn">Copy</button></div>
+                <pre><code>$env:LOG_LEVEL="DEBUG"; course-automation auth --timeout 300</code></pre>
+              </div>
+
+              <div class="callout callout-warning" style="margin-top: 1rem;">
+                <div class="callout-title">Privacy Notice for Reporting Issues</div>
+                <p>When reporting an authentication issue on GitHub:</p>
+                <ul style="margin-left: 1.5rem; margin-top: 0.5rem; line-height: 1.8;">
+                  <li>The built-in diagnostic logs automatically sanitize query parameters and redact sensitive tokens using <code>SanitizingFilter</code>. Diagnostic logs will only display sanitized URL paths and state transitions (e.g. <code>LOGIN_PAGE -&gt; AUTHENTICATED</code>).</li>
+                  <li><strong>NEVER</strong> attach or copy files from your <code>~/.course_automation/browser_profile</code> directory. This directory contains raw Chromium cookie databases and local storage.</li>
+                  <li><strong>NEVER</strong> share your password, session cookies, or <code>.env</code> file.</li>
+                  <li><em>Note: Offline synthetic unit tests verify detection logic across mock pages, but real-world site structure updates or third-party OAuth flows should always be validated live.</em></li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item">
+            <button class="accordion-trigger">
+              <span>4. Windows PowerShell: Script Execution Disabled (<code>PSSecurityException</code>)</span>
               <span class="accordion-icon">▼</span>
             </button>
             <div class="accordion-content">
@@ -647,7 +1295,7 @@ GEMINI_MODEL=gemini-flash-lite-latest</code></pre>
 
           <div class="accordion-item">
             <button class="accordion-trigger">
-              <span>4. Windows: <code>'python' is not recognized as an internal or external command</code></span>
+              <span>5. Windows: <code>'python' is not recognized as an internal or external command</code></span>
               <span class="accordion-icon">▼</span>
             </button>
             <div class="accordion-content">
@@ -662,7 +1310,7 @@ GEMINI_MODEL=gemini-flash-lite-latest</code></pre>
 
           <div class="accordion-item">
             <button class="accordion-trigger">
-              <span>5. CDP Protocol Error / Port 9222 Conflict</span>
+              <span>6. CDP Protocol Error / Port 9222 Conflict</span>
               <span class="accordion-icon">▼</span>
             </button>
             <div class="accordion-content">
@@ -672,7 +1320,7 @@ GEMINI_MODEL=gemini-flash-lite-latest</code></pre>
 
           <div class="accordion-item">
             <button class="accordion-trigger">
-              <span>6. Model Error: <code>404 NOT_FOUND: models/... is no longer available</code></span>
+              <span>7. Model Error: <code>404 NOT_FOUND: models/... is no longer available</code></span>
               <span class="accordion-icon">▼</span>
             </button>
             <div class="accordion-content">
@@ -686,7 +1334,7 @@ GEMINI_MODEL=gemini-flash-lite-latest</code></pre>
 
           <div class="accordion-item">
             <button class="accordion-trigger">
-              <span>7. macOS: Python 3.9 Error during <code>pip install -e .</code></span>
+              <span>8. macOS: Python 3.9 Error during <code>pip install -e .</code></span>
               <span class="accordion-icon">▼</span>
             </button>
             <div class="accordion-content">
@@ -712,7 +1360,7 @@ pip install -e .</code></pre>
 
           <div class="accordion-item">
             <button class="accordion-trigger">
-              <span>8. CLI Reports <code>INSPECTED_NO_AI</code> on Quizzes or Labs</span>
+              <span>9. CLI Reports <code>INSPECTED_NO_AI</code> on Quizzes or Labs</span>
               <span class="accordion-icon">▼</span>
             </button>
             <div class="accordion-content">
@@ -724,7 +1372,7 @@ pip install -e .</code></pre>
 
           <div class="accordion-item">
             <button class="accordion-trigger">
-              <span>9. Invalid API Key / <code>400 API_KEY_INVALID</code> or <code>403 PERMISSION_DENIED</code></span>
+              <span>10. Invalid API Key / <code>400 API_KEY_INVALID</code> or <code>403 PERMISSION_DENIED</code></span>
               <span class="accordion-icon">▼</span>
             </button>
             <div class="accordion-content">
@@ -736,7 +1384,7 @@ pip install -e .</code></pre>
 
           <div class="accordion-item">
             <button class="accordion-trigger">
-              <span>10. Rate Limit / Quota Exceeded (<code>429 RESOURCE_EXHAUSTED</code>)</span>
+              <span>11. Rate Limit / Quota Exceeded (<code>429 RESOURCE_EXHAUSTED</code>)</span>
               <span class="accordion-icon">▼</span>
             </button>
             <div class="accordion-content">
@@ -751,7 +1399,7 @@ pip install -e .</code></pre>
       <!-- Testing & Contributor Instructions -->
       <section id="testing">
         <h2>Running Automated Tests</h2>
-        <p>All 67 tests in the test suite run 100% offline using synthetic mocks and isolated local databases:</p>
+        <p>All 76 tests in the test suite run 100% offline using synthetic mocks and isolated local databases:</p>
         <div class="code-block">
           <div class="code-header"><span>bash</span><button class="copy-btn">Copy</button></div>
           <pre><code>pip install -e ".[dev]"

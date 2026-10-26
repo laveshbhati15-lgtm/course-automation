@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // 2. Tabbed Code Switching (macOS vs Windows)
+  // 2. Tabbed Code Switching (macOS vs Fedora vs Windows)
   const tabButtons = document.querySelectorAll('.tab-btn');
   tabButtons.forEach(btn => {
     btn.addEventListener('click', () => {
@@ -31,6 +31,24 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     });
   });
+
+  // Handle tab switching on hash change
+  function checkHashAndSwitchTab() {
+    const hash = window.location.hash;
+    if (hash === '#macos-install' || hash === '#tab-macos') {
+      const btn = document.querySelector('.tab-btn[data-tab="tab-macos"]');
+      if (btn) btn.click();
+    } else if (hash === '#windows-install' || hash === '#tab-windows') {
+      const btn = document.querySelector('.tab-btn[data-tab="tab-windows"]');
+      if (btn) btn.click();
+    } else if (hash === '#tab-fedora') {
+      const btn = document.querySelector('.tab-btn[data-tab="tab-fedora"]');
+      if (btn) btn.click();
+    }
+  }
+
+  window.addEventListener('hashchange', checkHashAndSwitchTab);
+  checkHashAndSwitchTab();
 
   // 3. One-Click Copy for Code Blocks
   const copyButtons = document.querySelectorAll('.copy-btn');

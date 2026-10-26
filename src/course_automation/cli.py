@@ -41,8 +41,14 @@ def version():
 
 
 @app.command()
-def config():
-    """Display current configuration and resolved directory paths."""
+def config(
+    check_ai: bool = typer.Option(
+        False,
+        "--check-ai",
+        help="Validate Gemini API key, model availability, and client connection",
+    ),
+):
+    """Display current configuration and optionally test the Gemini API connection."""
     from course_automation.browser.browser_use_bridge import BrowserUseBridge
     from course_automation.browser.session import probe_local_cdp
 
@@ -66,6 +72,30 @@ def config():
     table.add_row("Dry Run Default", str(settings.dry_run))
 
     console.print(table)
+
+    if check_ai:
+        if not settings.gemini_api_key:
+            console.print("[bold red]Error: GEMINI_API_KEY is not configured in .env or environment.[/bold red]")
+            console.print("Please set GEMINI_API_KEY in your .env file and ensure AI_PROVIDER=gemini.")
+            raise typer.Exit(code=1)
+
+        console.print(f"\n[cyan]Testing Gemini API search engine connection (model: {settings.gemini_model})...[/cyan]")
+        try:
+            provider = GeminiProvider(
+                api_key=settings.gemini_api_key,
+                model=settings.gemini_model,
+            )
+            response = provider._client.models.generate_content(
+                model=settings.gemini_model,
+                contents="ping",
+            )
+            if response and response.text:
+                console.print(f"[bold green]✓ Gemini API search engine verified successfully ({settings.gemini_model})![/bold green]")
+            else:
+                console.print("[bold yellow]Warning: Gemini API returned an empty response.[/bold yellow]")
+        except Exception as e:
+            console.print(f"[bold red]✗ Gemini API connection check failed:[/bold red] {e}")
+            raise typer.Exit(code=1)
 
 
 @app.command()

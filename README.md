@@ -14,7 +14,7 @@ Runs completely on your local machine using standard Python and Playwright. No b
 - [Windows 10/11 (PowerShell) Installation Guide](#windows-1011-powershell-installation-guide)
 - [Package Installation Commands (Verification)](#package-installation-commands-verification)
 - [Authentication & Browser Session Handling](#authentication--browser-session-handling)
-- [Configuration & Gemini API Setup](#configuration--gemini-api-setup)
+- [Configuration & Gemini API Setup (Required for Search Engine)](#configuration--gemini-api-setup-required-for-search-engine)
 - [Basic Usage & Examples](#basic-usage--examples)
 - [Safe Dry-Run Testing](#safe-dry-run-testing)
 - [Troubleshooting](#troubleshooting)
@@ -29,7 +29,7 @@ Runs completely on your local machine using standard Python and Playwright. No b
 Course Automation provides an accessible command-line interface to:
 1. **Inspect Course Structure:** Dynamically discovers modules, theory lessons, quizzes, and coding exercises from any valid CodeChef Learn course URL or active browser tab.
 2. **Read Theory Concepts:** Traverses reading lessons, smoothly scrolling to trigger dynamic rendering (MathJax and code snippets) and advancing using accessible navigation controls.
-3. **Assist with Quizzes (MCQs):** Extracts questions and answer choices, evaluates answers using local heuristic matching or optional AI reasoning, and requires human terminal confirmation before any action.
+3. **Assist with Quizzes (MCQs):** Extracts questions and answer choices, evaluates answers using local heuristic matching or the Gemini AI search & reasoning engine, and requires human terminal confirmation before any action.
 4. **Assist with Coding Labs:** Injects code into Monaco and Ace editors across C++, Java, C, and Python using base64 buffer injection to prevent quotation or newline corruption.
 5. **Track Offline Progress:** Maintains a local SQLite database of course syllabi and activity statuses without requiring an active browser session.
 
@@ -69,9 +69,166 @@ Course Automation provides an accessible command-line interface to:
 ### Supported Operating Systems
 | Operating System | Support Status | Verification Notes |
 |---|---|---|
-| **macOS (Apple Silicon & Intel)** | **Verified** | Fully tested and verified on macOS Darwin. |
-| **Linux (Ubuntu, Debian, Fedora)** | **Supported** | Standard POSIX Python and Playwright environments. |
-| **Windows 10 / Windows 11** | **Unverified on Host** | Architecturally supported; instructions below use standard PowerShell workflows. Must be validated on a physical Windows machine. |
+| **macOS (Apple Silicon & Intel)** | **Verified** | Fully tested and verified on macOS Darwin with Python 3.12 and 3.14. |
+| **Fedora Linux (39, 40, 41, 42)** | **Documented** | Native Python 3.12/3.13, DNF packaging, and Playwright Chromium. |
+| **Other Linux (Ubuntu, Debian, Arch)** | **Supported** | Standard POSIX Python 3.10+ and Playwright environments. |
+| **Windows 10 / Windows 11** | **Unverified on Host** | Architecturally supported; instructions use standard PowerShell workflows. Must be validated on a physical Windows machine. |
+
+---
+
+---
+
+## Download & Installation Overview
+
+Getting started takes only a few minutes. Follow the sequential 6-stage installation sequence below:
+1. **Download project:** Clone the repository or download the ZIP source archive.
+2. **Install dependencies:** Create a Python virtual environment (`.venv`), upgrade `pip`, and install package dependencies with AI search engine extras (`pip install -e ".[ai]"`).
+3. **Configure Gemini API:** Copy `.env.example` to `.env` and configure your personal Google Gemini API key and `AI_PROVIDER=gemini` (required for automated question reasoning and coding search).
+4. **Install browser dependencies:** Install Playwright's Chromium browser binary and operating system shared libraries.
+5. **Authenticate with CodeChef:** Run `course-automation auth --timeout 300` to establish and save your persistent session.
+6. **Verify the search engine:** Run `course-automation config --check-ai` to verify that your API key and Gemini model connection are live and functional.
+
+### Downloading the Source Code (Git Clone vs. ZIP)
+Public GitHub repository: **[github.com/laveshbhati15-lgtm/course-automation](https://github.com/laveshbhati15-lgtm/course-automation)**
+
+| Method | Command or Link | Notes |
+|---|---|---|
+| **Option A: Git Clone<br>*(Strongly Recommended)*** | `git clone https://github.com/laveshbhati15-lgtm/course-automation.git` | Preserves full Git history. Easily update to new releases and bug fixes with `git pull`. |
+| **Option B: ZIP Download** | [Download Source Code (.ZIP)](https://github.com/laveshbhati15-lgtm/course-automation/archive/refs/heads/main.zip) | Useful if Git is not installed. *Limitation:* Does not include Git metadata; **cannot be updated via `git pull`**. Future updates require re-downloading and extracting manually. |
+
+### Platform Installation Guides
+Choose your platform below for dedicated, step-by-step instructions:
+- [Fedora Linux Installation Guide](#fedora-linux-installation-guide) *(Beginner-friendly)*
+- [macOS Installation Guide](#macos-installation-guide)
+- [Windows 10/11 (PowerShell) Installation Guide](#windows-1011-powershell-installation-guide)
+- Or read the interactive documentation website: **[https://laveshbhati15-lgtm.github.io/course-automation/](https://laveshbhati15-lgtm.github.io/course-automation/)**
+
+---
+
+## Fedora Linux Installation Guide
+
+This guide is designed for beginners on Fedora Linux (Fedora 39, 40, 41, and 42 Workstation/Silverblue/KDE).
+
+### Step 1: Check Prerequisites in Terminal
+Open your **Terminal** application (press <kbd>Super</kbd> / Windows key, type `Terminal`, and press <kbd>Enter</kbd>).
+
+1. Check your Fedora version:
+   ```bash
+   cat /etc/os-release
+   ```
+2. Verify Python 3 (Fedora 39/40 provide Python 3.12; Fedora 41 provides Python 3.13; `>=3.10` is required):
+   ```bash
+   python3 --version
+   ```
+3. Check Git:
+   ```bash
+   git --version
+   ```
+
+### Step 2: Install Required System Packages via DNF
+Install Git, Python 3, pip, and development headers using Fedora's `dnf` package manager:
+```bash
+sudo dnf install -y git python3 python3-pip python3-devel
+```
+
+### Step 3: Clone and Enter the Repository
+Clone the repository to your local computer and enter the directory:
+```bash
+git clone https://github.com/laveshbhati15-lgtm/course-automation.git
+cd course-automation
+```
+Confirm you are in the project directory:
+```bash
+pwd
+ls
+```
+*(You will see `pyproject.toml`, `README.md`, `src/`, and `docs/`).*
+
+### Step 4: Create and Activate a Virtual Environment
+Virtual environments prevent conflicts with system packages and protect Fedora's system Python (avoiding PEP 668 errors):
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+```
+*(Your terminal prompt will now start with `(.venv)`).*
+
+### Step 5: Upgrade Pip & Install Dependencies (including AI Search Engine)
+1. Upgrade `pip` and install the package with AI extras enabled:
+   ```bash
+   python3 -m pip install --upgrade pip
+   pip install -e ".[ai]"
+   ```
+   *(To install development and testing dependencies as well: `pip install -e ".[dev]"`).*
+
+### Step 6: Configure the Gemini API (Required for Search Engine)
+> [!IMPORTANT]
+> **Mandatory Step for Search & Deduction Features:**
+> Configuring your Gemini API key is required to use the project's AI-powered search and deduction engine (answering quizzes, MCQs, and coding challenges). While non-API commands like `auth`, `inspect`, and `status` work without an API key, the search engine requires a valid personal Gemini key.
+
+1. Obtain a personal API key from [Google AI Studio](https://aistudio.google.com/app/apikey).
+2. Copy the configuration template to create `.env`:
+   ```bash
+   cp .env.example .env
+   ```
+3. Edit `.env` in a terminal editor (e.g., `nano .env` or `gedit .env`) and configure:
+   ```env
+   # AI Search Engine Configuration (Required for MCQs and Code Reasoning)
+   AI_PROVIDER=gemini
+   GEMINI_API_KEY=your_gemini_api_key_here
+   GEMINI_MODEL=gemini-flash-lite-latest
+   ```
+4. **Configuration Details:**
+   - `AI_PROVIDER=gemini`: The project defaults to `none`. Setting `AI_PROVIDER=gemini` is **required** to activate the search engine.
+   - `GEMINI_API_KEY`: Your personal secret key from Google AI Studio. Never share or commit this key.
+   - `GEMINI_MODEL`: Defaults to `gemini-flash-lite-latest`.
+   - **Security:** The application automatically loads `.env` on startup via Pydantic Settings. The `.env` file is strictly excluded from Git tracking via `.gitignore` (line 70).
+
+### Step 7: Install Browser Dependencies (Playwright Chromium & System Libraries)
+1. Install Playwright's Chromium browser binary:
+   ```bash
+   playwright install chromium
+   ```
+2. Install Chromium system shared libraries (NSS, Cairo, Pango, ATK, ALSA):
+   ```bash
+   playwright install-deps chromium
+   ```
+   *(Playwright will prompt for your `sudo` password to install any missing DNF packages automatically. If you prefer to install them manually: `sudo dnf install -y alsa-lib at-spi2-atk cairo cups-libs dbus-libs expat glib2 gtk3 libX11 libXcomposite libXdamage libXext libXfixes libXrandr libdrm libgbm libxcb libxshmfence mesa-libgbm nss nspr pango`).*
+
+### Step 8: Authenticate with CodeChef
+Launch the headful browser to log in to your CodeChef account:
+```bash
+course-automation auth --timeout 300
+```
+1. A visible Chromium window will open to `https://www.codechef.com/login`.
+2. **You must manually log in** inside the opened browser window using your CodeChef credentials, Google OAuth, or GitHub.
+3. The CLI monitors open browser tabs for authenticated course indicators and session cookies.
+4. Once detected, the CLI prints `[SUCCESS] Authentication detected! Session saved to profile.` and disconnects cleanly.
+5. *Troubleshooting:* If signing in via Google/GitHub opens a new tab, ensure you navigate to your course URL (`https://www.codechef.com/learn/course/<slug>`) so the detector can identify course elements. Do not close the browser manually. To diagnose issues without exposing secrets, run: `LOG_LEVEL=DEBUG course-automation auth --timeout 300`.
+
+### Step 9: Verify Your Search Engine Setup
+Do not assume the search engine is working merely because the CLI opens. Perform a safe, non-destructive connection test:
+```bash
+course-automation config --check-ai
+```
+**Expected Output:**
+```text
+[AI Check] Testing Gemini API connection...
+[AI Check] Gemini search & reasoning engine connected successfully!
+  Model: gemini-flash-lite-latest
+  Ping response: pong
+```
+
+You can also view the resolved local configuration paths:
+```bash
+course-automation config
+```
+
+### Step 10: Common Fedora Troubleshooting
+- **Python version error (`requires-python >= 3.10`):** Install Python 3.12 explicitly: `sudo dnf install -y python3.12 python3.12-devel`, then recreate `.venv` with `python3.12 -m venv .venv`.
+- **`externally-managed-environment` pip error:** Ensure your virtual environment is activated before installing: `source .venv/bin/activate`.
+- **Playwright missing library error:** Run `playwright install-deps chromium`. On Wayland desktops, ensure XWayland is available: `sudo dnf install -y xorg-x11-server-Xwayland`.
+- **Permission errors on `~/.course_automation`:** Restore ownership: `sudo chown -R $USER:$USER ~/.course_automation`.
+- **Missing test dependencies:** Run `pip install -e ".[dev]"` before running `pytest -v`.
 
 ---
 
@@ -99,7 +256,7 @@ python3 --version
   *(Expected output: `Python 3.12.x`)*
 
 ### Step 2: Clone the Repository
-Clone your private repository and navigate into the project directory:
+Clone the repository and navigate into the project directory:
 ```bash
 git clone https://github.com/laveshbhati15-lgtm/course-automation.git
 cd course-automation
@@ -119,35 +276,79 @@ python --version
 ```
 *(Must display `Python 3.12.x` or at least `Python 3.10+`).*
 
-### Step 4: Upgrade Pip and Install the Project
-Upgrade `pip` to the latest version and install the project in editable mode using `python3.12`:
+### Step 4: Upgrade Pip and Install Dependencies (including AI Search Engine)
+Upgrade `pip` to the latest version and install the project with AI search dependencies in editable mode using `python3.12`:
 ```bash
 python3.12 -m pip install --upgrade pip
-pip install -e .
+pip install -e ".[ai]"
 ```
 > **Tip for Contributors / Testers:** If you plan to run automated tests, install development dependencies:
 > ```bash
 > pip install -e ".[dev]"
 > ```
 
-### Step 5: Install the Required Playwright Browser
+### Step 5: Configure the Gemini API (Required for Search Engine)
+> [!IMPORTANT]
+> **Mandatory Step for Search & Deduction Features:**
+> Configuring your Gemini API key is required to use the project's AI-powered search and deduction engine (answering quizzes, MCQs, and coding challenges). While non-API commands like `auth`, `inspect`, and `status` work without an API key, the search engine requires a valid personal Gemini key.
+
+1. Obtain a personal API key from [Google AI Studio](https://aistudio.google.com/app/apikey).
+2. Copy the template to create your local `.env` file:
+   ```bash
+   cp .env.example .env
+   ```
+3. Edit `.env` in your editor (e.g., `nano .env` or VS Code) and configure:
+   ```env
+   # AI Search Engine Configuration (Required for MCQs and Code Reasoning)
+   AI_PROVIDER=gemini
+   GEMINI_API_KEY=your_gemini_api_key_here
+   GEMINI_MODEL=gemini-flash-lite-latest
+   ```
+4. **Configuration Details:**
+   - `AI_PROVIDER=gemini`: The project defaults to `none`. You **must** set `AI_PROVIDER=gemini` to activate the AI search engine.
+   - `GEMINI_API_KEY`: Your personal secret API key from Google AI Studio. Never share or commit this key.
+   - `GEMINI_MODEL`: Defaults to `gemini-flash-lite-latest`.
+   - **Security:** The application automatically loads `.env` on startup via Pydantic Settings. The `.env` file is strictly excluded from Git tracking via `.gitignore` (line 70).
+
+### Step 6: Install the Required Playwright Browser
 Download the standalone Chromium browser binary used by Playwright:
 ```bash
 playwright install chromium
 ```
 
-### Step 6: Verify the Installation
-Check that the CLI entry point and configuration load correctly:
+### Step 7: Authenticate with CodeChef
+Authenticate once using the headful browser to create and persist your session:
 ```bash
-course-automation --help
+course-automation auth --timeout 300
+```
+- A visible Chromium browser window will open to `https://www.codechef.com/login`.
+- **Manually log in** using your CodeChef username/password, Google OAuth, or GitHub.
+- Once detected, the CLI saves your session to `~/.course_automation/browser_profile` and closes the browser cleanly.
+
+### Step 8: Verify Search Engine Setup
+Run the active connection test to verify your Gemini API key and model connectivity:
+```bash
+course-automation config --check-ai
+```
+**Expected Output:**
+```text
+[AI Check] Testing Gemini API connection...
+[AI Check] Gemini search & reasoning engine connected successfully!
+  Model: gemini-flash-lite-latest
+  Ping response: pong
+```
+
+You can also check resolved configuration paths and status:
+```bash
 course-automation config
 ```
 
-### Step 7: Run Automated Tests
+### Step 9: Run Automated Tests
 Verify that all unit and integration tests pass offline:
 ```bash
 pytest -v
 ```
+*(All 76 offline tests should pass).*
 
 ---
 
@@ -200,21 +401,65 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process
 ```
 *(Your PowerShell prompt will now show `(.venv)`).*
 
-### Step 5: Upgrade Pip & Install Dependencies
+### Step 5: Upgrade Pip & Install Dependencies (including AI Search Engine)
 ```powershell
 python -m pip install --upgrade pip
-pip install -e .
+pip install -e ".[ai]"
 ```
 *(Or install dev dependencies for running tests: `pip install -e ".[dev]"`).*
 
-### Step 6: Install the Playwright Chromium Browser
+### Step 6: Configure the Gemini API (Required for Search Engine)
+> [!IMPORTANT]
+> **Mandatory Step for Search & Deduction Features:**
+> Configuring your Gemini API key is required to use the project's AI-powered search and deduction engine (answering quizzes, MCQs, and coding challenges). While non-API commands like `auth`, `inspect`, and `status` work without an API key, the search engine requires a valid personal Gemini key.
+
+1. Obtain a personal API key from [Google AI Studio](https://aistudio.google.com/app/apikey).
+2. Copy the template to create `.env`:
+   ```powershell
+   Copy-Item .env.example .env
+   ```
+3. Open `.env` in Notepad and configure:
+   ```env
+   # AI Search Engine Configuration (Required for MCQs and Code Reasoning)
+   AI_PROVIDER=gemini
+   GEMINI_API_KEY=your_gemini_api_key_here
+   GEMINI_MODEL=gemini-flash-lite-latest
+   ```
+4. **Configuration Details:**
+   - `AI_PROVIDER=gemini`: The project defaults to `none`. You **must** set `AI_PROVIDER=gemini` to activate the AI search engine.
+   - `GEMINI_API_KEY`: Your personal secret API key from Google AI Studio. Never share or commit this key.
+   - `GEMINI_MODEL`: Defaults to `gemini-flash-lite-latest`.
+   - **Security:** The application automatically loads `.env` on startup via Pydantic Settings. The `.env` file is strictly excluded from Git tracking via `.gitignore` (line 70).
+
+### Step 7: Install the Playwright Chromium Browser
 ```powershell
 playwright install chromium
 ```
 
-### Step 7: Verify Installation & Tests
+### Step 8: Authenticate with CodeChef
+Launch the headful browser to log in to your CodeChef account:
 ```powershell
-course-automation --help
+course-automation auth --timeout 300
+```
+- A visible Chromium browser window will open to `https://www.codechef.com/login`.
+- **Manually log in** using your CodeChef credentials, Google OAuth, or GitHub.
+- Once detected, the CLI saves your session to `%USERPROFILE%\.course_automation\browser_profile` and closes the browser cleanly.
+
+### Step 9: Verify Search Engine Setup & Run Tests
+Run the active connection test to verify your Gemini API key and model connectivity:
+```powershell
+course-automation config --check-ai
+```
+**Expected Output:**
+```text
+[AI Check] Testing Gemini API connection...
+[AI Check] Gemini search & reasoning engine connected successfully!
+  Model: gemini-flash-lite-latest
+  Ping response: pong
+```
+
+You can also inspect resolved paths and run the offline test suite:
+```powershell
 course-automation config
 pytest -v
 ```
@@ -229,7 +474,7 @@ The project relies strictly on standard Python packaging specified in `pyproject
 |---|---|---|
 | `pip install -e .` | Installs base project & runtime dependencies (Playwright, Typer, Rich, Pydantic, Requests, Dotenv). | Standard user installation. |
 | `pip install -e ".[dev]"` | Installs base project + testing dependencies (`pytest`, `pytest-mock`, `google-genai`). | Development and running tests. |
-| `pip install -e ".[ai]"` | Installs optional Google Gemini AI provider dependencies (`google-genai`). | Optional AI reasoning. |
+| `pip install -e ".[ai]"` | Installs Google Gemini AI provider dependencies (`google-genai`). | Required for AI search & deduction engine. |
 | `playwright install chromium` | Downloads the headless/headful Chromium browser binary. | Required before first browser run. |
 | `course-automation --help` | Validates CLI entry point and displays commands. | Smoke test installation. |
 | `course-automation config` | Displays resolved configuration paths and environment settings. | Diagnostics and path verification. |
@@ -241,13 +486,34 @@ The project relies strictly on standard Python packaging specified in `pyproject
 Course Automation uses a persistent local browser profile to maintain your logged-in state without storing your plaintext username or password.
 
 ### Step 1: Perform One-Time Login
-Launch a headful browser to log in to your CodeChef account:
+Course Automation uses an isolated persistent browser profile to maintain your logged-in state across CLI runs without storing your plaintext username or password.
+
+To authenticate, launch a visible (headful) browser window from your terminal:
 ```bash
 course-automation auth
 ```
-1. A Chromium browser window will open to the CodeChef login page.
-2. Complete your login manually (using email/password, Google OAuth, or GitHub).
-3. Once logged in, the tool detects your active session, saves cookies, and exits cleanly.
+
+By default, the CLI waits up to **300 seconds** for you to sign in. If you need more time (for two-factor authentication or slower connections), specify `--timeout`:
+```bash
+course-automation auth --timeout 600
+```
+
+#### Supported Options for `auth`
+- `--timeout <int>`: Maximum wait time in seconds for manual login (default: `300`).
+- `--site <str>`: Target platform (default: `codechef`).
+- `--help`: Display command usage details.
+
+*(Note: Unsupported flags like `--manual` do not exist. Authentication is always interactive and headful.)*
+
+#### How Authentication Works
+1. A headful Chromium browser window automatically opens to the CodeChef login page.
+2. **You must manually log in** inside the opened browser window using your preferred login method (CodeChef credentials, Google OAuth, or GitHub). The CLI does not read, intercept, or enter your passwords.
+3. The CLI monitors open browser tabs for authenticated course indicators (such as user avatar elements, course syllabus cards, and session cookies).
+4. Once authentication is detected, the CLI prints:
+   ```text
+   [SUCCESS] Authentication detected! Session saved to profile.
+   ```
+   and closes the browser cleanly, persisting your session in `~/.course_automation/browser_profile` (or `%USERPROFILE%\.course_automation\browser_profile` on Windows).
 
 ### Secure Handling & Transparency
 > [!IMPORTANT]
@@ -260,9 +526,14 @@ course-automation auth
 
 ---
 
-## Configuration & Gemini API Setup
+## Configuration & Gemini API Setup (Required for Search Engine)
 
-The core application runs without an API key for login, course inspection, theory reading, and local progress tracking. A personal Gemini API key and the AI dependencies (`google-genai`) are required for AI-powered reasoning on quiz questions and generating coding solutions. Students who want automated question-answering functionality must complete the Gemini setup below before using that feature.
+Configuring the Google Gemini API is a **mandatory installation step** to use the project's AI-powered search and reasoning engine. Without a valid API key, question reasoning and coding search cannot function.
+
+> [!IMPORTANT]
+> **API Key Requirement & Feature Separation:**
+> - **Required for Search & Deduction:** Accessing automated question-answering on quizzes (MCQs) and generating code solutions requires a valid personal Gemini API key.
+> - **Basic Features Run Without API:** Authentication (`course-automation auth`), syllabus inspection (`course-automation inspect`), offline progress tracking (`course-automation status`), and theory-only lesson advancement (`course-automation solve --theory-only`) do not require an API key.
 
 ---
 
@@ -277,30 +548,30 @@ The core application runs without an API key for login, course inspection, theor
 | **Theory Reading Lessons** (`course-automation solve --theory-only`) | **No** | Smoothly scrolls lessons to trigger dynamic MathJax rendering, finds enabled `Next` buttons, and advances. |
 | **Offline Progress Tracking** (`course-automation status`) | **No** | Queries local SQLite database (`~/.course_automation/progress.db`) completely offline. |
 | **Safe Dry-Run Simulations** (`--dry-run`) | **No** | Inspects DOM and navigates without clicking submit buttons or changing progress. |
-| **Automated Test Suite** (`pytest -v`) | **No** | All 67 unit and integration tests run 100% offline using synthetic fixtures and mocks. |
-| **Multiple-Choice Questions (MCQs)** | **Requires Key** | With API key: reasons about question options and evaluates answer confidence. Without API key: extracts question/options from DOM and reports verdict `INSPECTED_NO_AI` without guessing. |
-| **Coding Exercises & Labs** | **Requires Key** | With API key: generates language-specific code solutions. Without API key: inspects editor buffer and reports verdict `INSPECTED_NO_AI`. |
+| **Automated Test Suite** (`pytest -v`) | **No** | All 76 unit and integration tests run 100% offline using synthetic fixtures and mocks. |
+| **Multiple-Choice Questions (MCQs)** (`course-automation solve`) | **Requires Key** | **With API key:** Evaluates options against lesson context and selects high-confidence answers.<br>**Without API key:** Discovers options and logs `INSPECTED_NO_AI` without guessing. |
+| **Coding Exercises & Labs** (`course-automation solve`) | **Requires Key** | **With API key:** Generates syntactic solutions matching the requested problem statement.<br>**Without API key:** Inspects starter code and logs `INSPECTED_NO_AI`. |
 
 > [!NOTE]
-> **Implementation Note on Answer Reasoning:**
-> Course Automation uses the Google Gemini API (`gemini-flash-lite-latest` via the official `google-genai` SDK) for structured prompt reasoning. There is **no separate web search provider or `search.answer` endpoint** in this project; question evaluation and code solutions are powered directly by Gemini when configured.
+> **Architecture of the Search Engine:**
+> Course Automation uses the Google Gemini API (`gemini-flash-lite-latest` via the official `google-genai` SDK) as its underlying reasoning and search engine over lesson contexts and problem prompts. There is **no external web crawler or `search.answer` endpoint**; all conceptual search and answer deduction are performed by Gemini.
 
 ---
 
-### Step-by-Step API Key Setup (For Students)
+### Step-by-Step Gemini API Setup
 
-If you want automated reasoning for quizzes or coding exercises, follow these steps to configure your own personal key.
+Follow these steps to configure your personal Gemini API key securely.
 
 #### 1. Obtain a Personal Google Gemini API Key
-1. Go to [Google AI Studio](https://aistudio.google.com/app/apikey).
+1. Navigate to [Google AI Studio](https://aistudio.google.com/app/apikey).
 2. Sign in with your personal Google account.
-3. Click **Create API Key** and copy your newly generated key.
+3. Click **Create API Key** and copy your generated key string.
 
 > [!IMPORTANT]
-> **Student Responsibility & Quota Notice:**
-> - **Each student must configure their own personal API key.** Never share your key with classmates or commit it to GitHub.
-> - The default model `gemini-flash-lite-latest` is eligible for Google's developer free tier.
-> - **API Quotas & Costs:** Free-tier usage is subject to Google's rate limits (requests per minute/day). If you exceed free-tier quotas or configure a paid billing account in Google Cloud, charges may apply according to Google's pricing terms. The maintainers do not supply, sponsor, or guarantee free or unlimited API access.
+> **User Responsibility & Quota Rules:**
+> - **Each user must configure their own personal API key.** Never share your key or commit it to Git repositories.
+> - Google AI Studio accounts provide developer access with per-minute and per-day rate limits.
+> - The default model `gemini-flash-lite-latest` is eligible for Google's free tier. The project maintainers do not supply or guarantee free, unlimited API access.
 
 #### 2. Create Your Local `.env` File
 In the project root directory, copy the configuration template:
@@ -315,10 +586,10 @@ cp .env.example .env
 Copy-Item .env.example .env
 ```
 
-#### 3. Edit `.env` with Your Key
-Open `.env` in any text editor (VS Code, Nano, Notepad, etc.) and configure your settings using placeholder syntax:
+#### 3. Edit `.env` with Required Variables
+Open `.env` in any text editor and configure the required settings:
 ```env
-# Enable the Gemini AI provider (default is 'none')
+# AI Search Engine Configuration (Required for MCQs and Code Reasoning)
 AI_PROVIDER=gemini
 
 # Your personal Google AI Studio API key (supports GEMINI_API_KEY or GOOGLE_API_KEY)
@@ -328,14 +599,31 @@ GEMINI_API_KEY=your_gemini_api_key_here
 GEMINI_MODEL=gemini-flash-lite-latest
 ```
 
-#### 4. Install the Optional AI Package
-Ensure the `google-genai` SDK is installed in your virtual environment:
+**Variable Breakdown:**
+- `AI_PROVIDER=gemini`: The application defaults to `none`. You **must** set `AI_PROVIDER=gemini` to activate the AI search engine.
+- `GEMINI_API_KEY`: Your secret key from Google AI Studio. Never use dummy or real keys in public files.
+- `GEMINI_MODEL`: Defaults to `gemini-flash-lite-latest`.
+
+#### 4. Install the AI Search Engine Package
+Install the official `google-genai` SDK and AI dependencies:
 ```bash
 pip install -e ".[ai]"
 ```
 
-#### 5. Verify That Configuration is Loaded
-Run the CLI configuration diagnostic command:
+#### 5. Verify Your Search Engine Setup
+Do not assume your API key is functioning simply because the CLI launches. Run the dedicated, non-destructive health-check test:
+```bash
+course-automation config --check-ai
+```
+**Expected Output:**
+```text
+[AI Check] Testing Gemini API connection...
+[AI Check] Gemini search & reasoning engine connected successfully!
+  Model: gemini-flash-lite-latest
+  Ping response: pong
+```
+
+You can also view your loaded settings and masked key status:
 ```bash
 course-automation config
 ```
@@ -344,7 +632,21 @@ You should see:
 - `Gemini Model: gemini-flash-lite-latest`
 - `Gemini API Key: [SET (REDACTED)]`
 
-*(If the key is displayed as `[NOT SET]`, ensure your `.env` file is in the project root directory and the variable name is spelled `GEMINI_API_KEY`).*
+To test the full question-solving pipeline safely without modifying your real course progress, run a dry-run:
+```bash
+course-automation solve "https://www.codechef.com/learn/course/<slug>" --dry-run
+```
+
+---
+
+### Understanding API Limits & Errors
+
+| Error / Symptom | Root Cause | Solution |
+|---|---|---|
+| `GEMINI_API_KEY is not set` / `INSPECTED_NO_AI` | Missing key in `.env` or `AI_PROVIDER=none`. | Ensure `.env` contains `AI_PROVIDER=gemini` and a valid `GEMINI_API_KEY`. |
+| `400 API_KEY_INVALID` / `403 PERMISSION_DENIED` | Key string has a typo, extra whitespace, or was revoked. | Generate a fresh key at Google AI Studio and update `.env`. |
+| `429 RESOURCE_EXHAUSTED` | Exceeded Google AI Studio free tier rate limits (requests/minute or quota/day). | Wait 60 seconds for the rate limit window to reset, or run with `--theory-only` to bypass AI calls. |
+| `404 NOT_FOUND: models/...` | The configured model name is deprecated or misspelled. | Ensure `GEMINI_MODEL=gemini-flash-lite-latest` in `.env`. |
 
 ---
 
@@ -445,7 +747,42 @@ playwright install chromium
 course-automation auth
 ```
 
-### 3. Windows PowerShell: Script Execution Disabled
+### 3. Login Succeeds in Browser but CLI Keeps Waiting and Times Out
+**Symptom:** You manually log in to CodeChef in the opened browser window and the course or dashboard is visibly displayed, but the terminal continues waiting and eventually reports: `Authentication was not completed within the time limit.`
+
+**Potential Causes:**
+- **Multi-Tab / OAuth Redirection:** Signing in via Google or GitHub OAuth may open a popup or redirect in a new tab, leaving the initial tab on an intermediate URL while the course loads in another tab.
+- **Course Page Not Loaded:** The browser remained on an account settings, payment, or home page rather than an active course or learning dashboard.
+- **Browser Window Closed Early:** Closing the browser window manually before the CLI confirms authentication interrupts session verification.
+
+**Solution:**
+1. **Keep the browser open:** Do not close the Chromium browser manually. The tool will automatically close it and save the session once authentication is verified.
+2. **Navigate to your course:** If redirected to the home page or a blank tab, navigate directly to your course (e.g. `https://www.codechef.com/learn/course/...`) so the detector can identify course elements.
+3. **Extend the timeout:** If your login flow or 2FA requires more time, increase the timeout:
+   ```bash
+   course-automation auth --timeout 600
+   ```
+
+**Collecting Safe Diagnostic Logs:**
+To inspect what the detector sees during authentication without leaking any secrets, run the command with debug logging enabled:
+- **macOS / Linux:**
+  ```bash
+  LOG_LEVEL=DEBUG course-automation auth --timeout 300
+  ```
+- **Windows PowerShell:**
+  ```powershell
+  $env:LOG_LEVEL="DEBUG"; course-automation auth --timeout 300
+  ```
+
+> [!CAUTION]
+> **Privacy Notice for Reporting Issues:**
+> When reporting an authentication issue on GitHub:
+> - The built-in diagnostic logs automatically sanitize query parameters and redact sensitive tokens using `SanitizingFilter`. Diagnostic logs will only display sanitized URL paths and state transitions (e.g. `LOGIN_PAGE -> AUTHENTICATED`).
+> - **NEVER** attach or copy files from your `~/.course_automation/browser_profile` directory. This directory contains raw Chromium cookie databases and local storage.
+> - **NEVER** share your password, session cookies, or `.env` file.
+> - *Note: Offline synthetic unit tests verify detection logic across mock pages, but real-world site structure updates or third-party OAuth flows should always be validated live.*
+
+### 4. Windows PowerShell: Script Execution Disabled
 **Symptom:** `File ... .venv\Scripts\Activate.ps1 cannot be loaded because running scripts is disabled on this system.`
 **Solution:** Set the execution policy for the current process:
 ```powershell
@@ -453,24 +790,24 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process
 .venv\Scripts\Activate.ps1
 ```
 
-### 4. Windows: `python` or `pip` is Not Recognized
+### 5. Windows: `python` or `pip` is Not Recognized
 **Symptom:** `'python' is not recognized as an internal or external command...`
 **Solution:**
 - Ensure Python was installed with **"Add python.exe to PATH"** checked.
 - Alternatively, use the Windows Python launcher: `py -3 -m venv .venv`.
 
-### 5. CDP Protocol Error / Port 9222 Conflict
+### 6. CDP Protocol Error / Port 9222 Conflict
 **Symptom:** `Protocol error (Browser.setDownloadBehavior)` or unable to connect to CDP.
 **Solution:** Leave `BROWSER_CDP_URL=` empty in your `.env` file. The tool will use its isolated persistent browser profile automatically.
 
-### 6. Gemini Model Not Found
+### 7. Gemini Model Not Found
 **Symptom:** `404 NOT_FOUND: models/... is no longer available`
 **Solution:** In `.env`, ensure you are using an active model:
 ```env
 GEMINI_MODEL=gemini-flash-lite-latest
 ```
 
-### 7. macOS: Python 3.9 Error during `pip install -e .`
+### 8. macOS: Python 3.9 Error during `pip install -e .`
 **Symptom:**
 ```
 ERROR: Package 'course-automation' requires a different Python: 3.9.6 not in '>=3.10'
@@ -498,7 +835,7 @@ ERROR: Package 'course-automation' requires a different Python: 3.9.6 not in '>=
    # Expected output: Python 3.12.x
    ```
 
-### 8. CLI Reports `INSPECTED_NO_AI` on Quizzes or Coding Labs
+### 9. CLI Reports `INSPECTED_NO_AI` on Quizzes or Coding Labs
 **Symptom:** During `course-automation solve`, quiz and coding activities log:
 ```
 Discovered options; no AI provider configured. (Verdict: INSPECTED_NO_AI)
@@ -511,7 +848,7 @@ Discovered options; no AI provider configured. (Verdict: INSPECTED_NO_AI)
   ```
 - To enable AI reasoning, configure `AI_PROVIDER=gemini` and your `GEMINI_API_KEY` in `.env`, install dependencies with `pip install -e ".[ai]"`, and verify with `course-automation config`.
 
-### 9. Invalid API Key / `400 API_KEY_INVALID` or `403 PERMISSION_DENIED`
+### 10. Invalid API Key / `400 API_KEY_INVALID` or `403 PERMISSION_DENIED`
 **Symptom:** `google.genai.errors.ClientError: 400 API_KEY_INVALID` or `403 PERMISSION_DENIED`.
 **Cause:** The configured `GEMINI_API_KEY` has a typo, was revoked, or lacks permission for the Gemini API.
 **Solution:**
@@ -519,7 +856,7 @@ Discovered options; no AI provider configured. (Verdict: INSPECTED_NO_AI)
 2. Update `GEMINI_API_KEY=your_new_key` in `.env`.
 3. Test with `course-automation config`.
 
-### 10. Rate Limit / Quota Exceeded (`429 RESOURCE_EXHAUSTED`)
+### 11. Rate Limit / Quota Exceeded (`429 RESOURCE_EXHAUSTED`)
 **Symptom:** `google.genai.errors.ClientError: 429 RESOURCE_EXHAUSTED` (Quota exceeded for metric).
 **Cause:** Exceeded Google AI Studio's free tier requests-per-minute or daily quota.
 **Solution:**
@@ -531,7 +868,7 @@ Discovered options; no AI provider configured. (Verdict: INSPECTED_NO_AI)
 ## Testing & Contributor Instructions
 
 ### Running Tests
-All 67 tests in the test suite run **100% offline** using synthetic mocks and isolated local databases:
+All 76 tests in the test suite run **100% offline** using synthetic mocks and isolated local databases:
 ```bash
 # Install development dependencies
 pip install -e ".[dev]"
