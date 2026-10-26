@@ -514,39 +514,78 @@ playwright install-deps chromium</code></pre>
           <div class="tab-content" id="tab-windows">
             <span id="windows-install" style="position: relative; top: -100px;"></span>
             <div class="callout callout-info">
-              <div class="callout-title">Windows Prerequisites (Recommend Python 3.12)</div>
-              <p>Install <strong>Python 3.12</strong> from <a href="https://www.python.org/downloads/" target="_blank" rel="noopener noreferrer" style="color: var(--accent-cyan);">python.org</a> (Ensure <strong>"Add python.exe to PATH"</strong> is checked) and <strong>Git for Windows</strong> from <a href="https://git-scm.com/download/win" target="_blank" rel="noopener noreferrer" style="color: var(--accent-cyan);">git-scm.com</a>. Verify with <code>python --version</code>.</p>
+              <div class="callout-title">Windows Prerequisites (Python &gt;= 3.10 Compatible, 3.12 Recommended)</div>
+              <p>Course Automation requires <strong>Python &gt;= 3.10</strong> (supported releases: Python 3.10, 3.11, 3.12, and 3.13+; Python 3.12 is recommended for optimal pre-built wheels). Check which scenario matches your system below before proceeding.</p>
             </div>
 
-            <p><strong>Step 1: Clone Repository in PowerShell</strong></p>
+            <p><strong>Step 1: Check Python Version in PowerShell (Identify Your Scenario)</strong></p>
+
+            <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.25rem; margin-bottom: 1.5rem;">
+              <h4 style="margin-top: 0; color: var(--accent-cyan); font-size: 0.95rem;">Case 1: Python 3.12 &amp; Windows Python Launcher Installed (Recommended)</h4>
+              <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 0.5rem;">Run the Windows launcher to verify Python 3.12 without Microsoft Store alias issues:</p>
+              <div class="code-block" style="margin-bottom: 1rem;">
+                <div class="code-header"><span>powershell</span><button class="copy-btn">Copy</button></div>
+                <pre><code>py -3.12 --version</code></pre>
+              </div>
+
+              <h4 style="color: var(--accent-cyan); font-size: 0.95rem;">Case 2: Python Installed, but Another Supported Version (3.13, 3.11, or 3.10)</h4>
+              <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 0.5rem;">List all detected versions or check your installed supported release (&gt;= 3.10):</p>
+              <div class="code-block" style="margin-bottom: 1rem;">
+                <div class="code-header"><span>powershell</span><button class="copy-btn">Copy</button></div>
+                <pre><code>py --list
+py -3.13 --version   # If using Python 3.13 (>=3.10 compatible)
+py -3.11 --version   # If using Python 3.11 (>=3.10 compatible)</code></pre>
+              </div>
+
+              <h4 style="color: var(--accent-cyan); font-size: 0.95rem;">Case 3: The <code>py</code> Command is Not Recognized (Fallback to <code>python</code> in PATH)</h4>
+              <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 0.5rem;">If <code>py</code> is missing, Python was installed without the launcher. Fall back to checking if <code>python</code> in your PATH is supported (&gt;= 3.10):</p>
+              <div class="code-block" style="margin-bottom: 1rem;">
+                <div class="code-header"><span>powershell</span><button class="copy-btn">Copy</button></div>
+                <pre><code>python --version</code></pre>
+              </div>
+
+              <h4 style="color: var(--accent-cyan); font-size: 0.95rem;">Case 4: Python is Not Installed (or Older than 3.10)</h4>
+              <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 0;">Download <strong>Python 3.12</strong> from <a href="https://www.python.org/downloads/" target="_blank" rel="noopener noreferrer" style="color: var(--accent-cyan);">python.org</a> (check <strong>"Add python.exe to PATH"</strong> and ensure <strong>"Use admin privileges when installing py.exe"</strong> is checked) and <strong>Git for Windows</strong> from <a href="https://git-scm.com/download/win" target="_blank" rel="noopener noreferrer" style="color: var(--accent-cyan);">git-scm.com</a>. Restart PowerShell and run <code>py -3.12 --version</code>.</p>
+            </div>
+
+            <p><strong>Step 2: Clone Repository in PowerShell</strong></p>
             <div class="code-block">
               <div class="code-header"><span>powershell</span><button class="copy-btn">Copy</button></div>
               <pre><code>git clone https://github.com/laveshbhati15-lgtm/course-automation.git
 cd course-automation</code></pre>
             </div>
 
-            <p><strong>Step 2: Create Virtual Environment</strong></p>
+            <p><strong>Step 3: Create Virtual Environment</strong></p>
+            <p style="color: var(--text-muted); font-size: 0.9rem;">Run the creation command matching your scenario (using the launcher or falling back to PATH):</p>
             <div class="code-block">
               <div class="code-header"><span>powershell</span><button class="copy-btn">Copy</button></div>
-              <pre><code>python -m venv .venv</code></pre>
-            </div>
-            <p><em>(If you have multiple Python versions, use: <code>py -3.12 -m venv .venv</code>)</em></p>
+              <pre><code># Case 1 (Recommended - Python 3.12 Launcher):
+py -3.12 -m venv .venv
 
-            <p><strong>Step 3: Activate Safely (Bypassing Script Restrictions for this Session)</strong></p>
+# Case 2 (Other Supported Version, e.g. 3.13 or 3.11):
+# py -3.13 -m venv .venv
+# py -3.11 -m venv .venv
+# py -m venv .venv
+
+# Case 3 (Fallback: py Not Available, Using python in PATH):
+# python -m venv .venv</code></pre>
+            </div>
+
+            <p><strong>Step 4: Activate Safely (Bypassing Script Restrictions for this Session)</strong></p>
             <div class="code-block">
               <div class="code-header"><span>powershell</span><button class="copy-btn">Copy</button></div>
               <pre><code>Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process
 .venv\Scripts\Activate.ps1</code></pre>
             </div>
 
-            <p><strong>Step 4: Upgrade Pip & Install Dependencies (including AI search engine)</strong></p>
+            <p><strong>Step 5: Upgrade Pip & Install Dependencies (including AI search engine)</strong></p>
             <div class="code-block">
               <div class="code-header"><span>powershell</span><button class="copy-btn">Copy</button></div>
               <pre><code>python -m pip install --upgrade pip
 pip install -e ".[ai]"</code></pre>
             </div>
 
-            <p><strong>Step 5: Configure the Gemini API (Required for Search Engine)</strong></p>
+            <p><strong>Step 6: Configure the Gemini API (Required for Search Engine)</strong></p>
             <p>Copy the template to <code>.env</code> and configure your Gemini API key:</p>
             <div class="code-block">
               <div class="code-header"><span>powershell</span><button class="copy-btn">Copy</button></div>
@@ -557,19 +596,19 @@ pip install -e ".[ai]"</code></pre>
 #   GEMINI_MODEL=gemini-flash-lite-latest</code></pre>
             </div>
 
-            <p><strong>Step 6: Install Playwright Chromium Browser</strong></p>
+            <p><strong>Step 7: Install Playwright Chromium Browser</strong></p>
             <div class="code-block">
               <div class="code-header"><span>powershell</span><button class="copy-btn">Copy</button></div>
               <pre><code>playwright install chromium</code></pre>
             </div>
 
-            <p><strong>Step 7: Authenticate with CodeChef</strong></p>
+            <p><strong>Step 8: Authenticate with CodeChef</strong></p>
             <div class="code-block">
               <div class="code-header"><span>powershell</span><button class="copy-btn">Copy</button></div>
               <pre><code>course-automation auth --timeout 300</code></pre>
             </div>
 
-            <p><strong>Step 8: Verify Search Engine Setup</strong></p>
+            <p><strong>Step 9: Verify Search Engine Setup</strong></p>
             <div class="code-block">
               <div class="code-header"><span>powershell</span><button class="copy-btn">Copy</button></div>
               <pre><code>course-automation config --check-ai</code></pre>
@@ -1295,16 +1334,17 @@ GEMINI_MODEL=gemini-flash-lite-latest</code></pre>
 
           <div class="accordion-item">
             <button class="accordion-trigger">
-              <span>5. Windows: <code>'python' is not recognized as an internal or external command</code></span>
+              <span>5. Windows: Python / Pip Not Recognized or Microsoft Store Opens</span>
               <span class="accordion-icon">▼</span>
             </button>
             <div class="accordion-content">
-              <p>Python was installed without adding it to the system PATH. You can use the Windows Python launcher instead:</p>
-              <div class="code-block">
-                <div class="code-header"><span>powershell</span><button class="copy-btn">Copy</button></div>
-                <pre><code>py -3 -m venv .venv</code></pre>
-              </div>
-              <p>Or reinstall Python from <a href="https://python.org" target="_blank" rel="noopener noreferrer" style="color: var(--accent-cyan);">python.org</a> and check <strong>"Add python.exe to PATH"</strong>.</p>
+              <p>Running <code>python</code> failed or launched the Microsoft Store app execution alias. Use the solution corresponding to your scenario:</p>
+              <ul style="margin-left: 1.5rem; line-height: 1.8; color: var(--text-muted);">
+                <li><strong>Case 1 (Python 3.12 + launcher):</strong> Use <code>py -3.12 --version</code> and <code>py -3.12 -m venv .venv</code>.</li>
+                <li><strong>Case 2 (Other supported version: 3.13, 3.11, or 3.10):</strong> Run <code>py --list</code> to see detected versions, then use <code>py -3.13 -m venv .venv</code> or <code>py -3.11 -m venv .venv</code> (all &gt;= 3.10 are supported).</li>
+                <li><strong>Case 3 (Fallback if <code>py</code> not recognized):</strong> Run <code>python --version</code> to verify if system Python in PATH satisfies &gt;= 3.10. If so, use <code>python -m venv .venv</code>.</li>
+                <li><strong>Case 4 (Python not installed):</strong> Download Python 3.12 from <a href="https://python.org" target="_blank" rel="noopener noreferrer" style="color: var(--accent-cyan);">python.org</a>. In the installer, check <strong>"Add python.exe to PATH"</strong> and <strong>"Use admin privileges when installing py.exe"</strong>.</li>
+              </ul>
             </div>
           </div>
 

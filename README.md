@@ -357,30 +357,75 @@ pytest -v
 > [!NOTE]
 > **Windows Verification Notice:** These instructions are based on standard Windows 10/11 PowerShell conventions and standard Playwright/Python procedures. Because our primary development machine is macOS, Windows execution has not been verified on this host and should be confirmed on your Windows machine.
 
-### Step 1: Install Prerequisites
-1. **Python 3.10 - 3.12 (Recommend 3.12):**
-   - Download the official installer from [python.org](https://www.python.org/downloads/).
-   - **CRITICAL:** On the first installer screen, check the box: **"Add python.exe to PATH"** before clicking Install Now.
-2. **Git for Windows:**
-   - Download and install from [git-scm.com](https://git-scm.com/download/win).
-3. **Verify Version:**
+### Step 1: Check Python Version in PowerShell (Choose Your Scenario)
+Course Automation requires **Python >= 3.10** (`requires-python = ">=3.10"` in `pyproject.toml`). Supported releases include **Python 3.10, 3.11, 3.12, and 3.13+** (Python 3.12 is recommended for optimal dependency pre-built wheels). Python 3.9 and older versions are strictly unsupported.
+
+Open **PowerShell** (search for "PowerShell" in the Start menu) and identify which scenario applies to your machine:
+
+#### Case 1: Python 3.12 and the Windows Python Launcher (`py`) are installed (Recommended)
+Run the Windows Python Launcher:
+```powershell
+py -3.12 --version
+```
+*(Expected output: `Python 3.12.x`. Using `py` avoids Microsoft Store app execution aliases and works even if `python.exe` was not added to your system PATH).*
+
+#### Case 2: Python is installed, but another supported version is available (e.g. 3.13, 3.11, or 3.10)
+List all Python versions detected by the Windows launcher:
+```powershell
+py --list
+```
+*(Or `py -0`). Any installed version satisfying `>=3.10` can be used:*
+```powershell
+py -3.13 --version   # If using Python 3.13
+py -3.11 --version   # If using Python 3.11
+py -3.10 --version   # If using Python 3.10
+```
+*(You can also run `py --version` to check the launcher's default active version).*
+
+#### Case 3: The `py` command is not recognized (Fallback to `python` in PATH)
+If `py` is missing, Python was installed without the Windows launcher. Fall back to checking if `python` in your PATH is supported:
+```powershell
+python --version
+```
+*(If this reports any version >= 3.10, such as `Python 3.12.x`, `3.13.x`, `3.11.x`, or `3.10.x`, your system Python in PATH is supported).*
+
+#### Case 4: Python is not installed (or older than Python 3.10)
+If neither `py` nor `python` reports a supported version (`>=3.10`):
+1. Download **Python 3.12** from [python.org/downloads/](https://www.python.org/downloads/).
+2. In the installer:
+   - Check **"Add python.exe to PATH"**.
+   - Ensure **"Use admin privileges when installing py.exe"** is checked.
+3. Download and install **Git for Windows** from [git-scm.com](https://git-scm.com/download/win).
+4. Restart PowerShell and run:
    ```powershell
-   python --version
+   py -3.12 --version
    ```
-   *(Ensure it reports `Python 3.10.x`, `3.11.x`, or `3.12.x`).*
+
+---
 
 ### Step 2: Open PowerShell & Clone the Repository
-Open **PowerShell** (search for "PowerShell" in the Start menu) and clone the repository:
+Clone the repository and enter the project folder:
 ```powershell
 git clone https://github.com/laveshbhati15-lgtm/course-automation.git
 cd course-automation
 ```
 
 ### Step 3: Create a Virtual Environment
-```powershell
-python -m venv .venv
-```
-*(If you have multiple Python versions installed, specify Python 3.12 explicitly: `py -3.12 -m venv .venv`).*
+Create an isolated `.venv` using the command matching your scenario above:
+
+- **Case 1 (Python 3.12 Launcher - Recommended):**
+  ```powershell
+  py -3.12 -m venv .venv
+  ```
+- **Case 2 (Other Supported Version: 3.13, 3.11, or 3.10):**
+  ```powershell
+  py -3.13 -m venv .venv   # Or: py -3.11 -m venv .venv / py -3.10 -m venv .venv
+  ```
+  *(Or `py -m venv .venv` to use the newest detected Python 3 installation).*
+- **Case 3 (Fallback: `py` Not Available, Using `python` in PATH):**
+  ```powershell
+  python -m venv .venv
+  ```
 
 > [!NOTE]
 > **Recreating an Outdated Environment on Windows:**
@@ -402,6 +447,7 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process
 *(Your PowerShell prompt will now show `(.venv)`).*
 
 ### Step 5: Upgrade Pip & Install Dependencies (including AI Search Engine)
+With `(.venv)` active, upgrade pip and install dependencies:
 ```powershell
 python -m pip install --upgrade pip
 pip install -e ".[ai]"
@@ -790,11 +836,13 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process
 .venv\Scripts\Activate.ps1
 ```
 
-### 5. Windows: `python` or `pip` is Not Recognized
-**Symptom:** `'python' is not recognized as an internal or external command...`
-**Solution:**
-- Ensure Python was installed with **"Add python.exe to PATH"** checked.
-- Alternatively, use the Windows Python launcher: `py -3 -m venv .venv`.
+### 5. Windows: Python or Pip is Not Recognized / Microsoft Store Opens
+**Symptom:** Running `python` outputs `python is not recognized as an internal or external command` or opens the Microsoft Store app execution alias.
+**Solutions across scenarios:**
+1. **Case 1 (Python 3.12 with launcher):** Use `py -3.12 --version` and `py -3.12 -m venv .venv`.
+2. **Case 2 (Other supported version: 3.13, 3.11, or 3.10):** Run `py --list` to check detected versions, then use `py -3.13 -m venv .venv` or `py -3.11 -m venv .venv` (all `>=3.10` are supported).
+3. **Case 3 (Fallback if `py` not recognized):** Run `python --version` to verify if system Python in PATH satisfies `>=3.10`. If supported, run `python -m venv .venv`.
+4. **Case 4 (Python not installed):** Install Python 3.12 from [python.org](https://python.org). In the installer, check **"Add python.exe to PATH"** and **"Use admin privileges when installing py.exe"**, then reopen PowerShell.
 
 ### 6. CDP Protocol Error / Port 9222 Conflict
 **Symptom:** `Protocol error (Browser.setDownloadBehavior)` or unable to connect to CDP.
