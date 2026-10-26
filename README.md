@@ -14,7 +14,7 @@ Runs completely on your local machine using standard Python and Playwright. No b
 - [Windows 10/11 (PowerShell) Installation Guide](#windows-1011-powershell-installation-guide)
 - [Package Installation Commands (Verification)](#package-installation-commands-verification)
 - [Authentication & Browser Session Handling](#authentication--browser-session-handling)
-- [Configuration & Optional AI Setup](#configuration--optional-ai-setup)
+- [Configuration & Gemini API Setup](#configuration--gemini-api-setup)
 - [Basic Usage & Examples](#basic-usage--examples)
 - [Safe Dry-Run Testing](#safe-dry-run-testing)
 - [Troubleshooting](#troubleshooting)
@@ -260,9 +260,9 @@ course-automation auth
 
 ---
 
-## Configuration & API Key Setup
+## Configuration & Gemini API Setup
 
-Course Automation operates **100% locally by default and does NOT require an API key** for most core functionality. An API key is only needed if you want automated reasoning for quizzes or starter code generation for programming labs.
+The core application runs without an API key for login, course inspection, theory reading, and local progress tracking. A personal Gemini API key and the AI dependencies (`google-genai`) are required for AI-powered reasoning on quiz questions and generating coding solutions. Students who want automated question-answering functionality must complete the Gemini setup below before using that feature.
 
 ---
 
@@ -278,8 +278,8 @@ Course Automation operates **100% locally by default and does NOT require an API
 | **Offline Progress Tracking** (`course-automation status`) | **No** | Queries local SQLite database (`~/.course_automation/progress.db`) completely offline. |
 | **Safe Dry-Run Simulations** (`--dry-run`) | **No** | Inspects DOM and navigates without clicking submit buttons or changing progress. |
 | **Automated Test Suite** (`pytest -v`) | **No** | All 67 unit and integration tests run 100% offline using synthetic fixtures and mocks. |
-| **Multiple-Choice Questions (MCQs)** | **Optional** | With API key: reasons about question options and evaluates answer confidence. Without API key: extracts question/options from DOM and reports verdict `INSPECTED_NO_AI` without guessing. |
-| **Coding Exercises & Labs** | **Optional** | With API key: generates language-specific code solutions. Without API key: inspects editor buffer and reports verdict `INSPECTED_NO_AI`. |
+| **Multiple-Choice Questions (MCQs)** | **Requires Key** | With API key: reasons about question options and evaluates answer confidence. Without API key: extracts question/options from DOM and reports verdict `INSPECTED_NO_AI` without guessing. |
+| **Coding Exercises & Labs** | **Requires Key** | With API key: generates language-specific code solutions. Without API key: inspects editor buffer and reports verdict `INSPECTED_NO_AI`. |
 
 > [!NOTE]
 > **Implementation Note on Answer Reasoning:**
