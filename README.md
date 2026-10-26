@@ -119,24 +119,6 @@ python --version
 ```
 *(Must display `Python 3.12.x` or at least `Python 3.10+`).*
 
-> [!WARNING]
-> **Fixing an Existing Virtual Environment Created with Python 3.9:**
-> If you previously created `.venv` with Python 3.9, installing Python 3.12 on your Mac will not update the existing environment because `.venv` remains permanently bound to Python 3.9.
->
-> You must delete and recreate the virtual environment:
-> ```bash
-> # 1. Deactivate if currently active
-> deactivate 2>/dev/null || true
->
-> # 2. Delete only the isolated virtual environment folder
-> rm -rf .venv
->
-> # 3. Recreate cleanly with Python 3.12
-> python3.12 -m venv .venv
-> source .venv/bin/activate
-> ```
-> *Safe deletion note: This command removes only the local `.venv` directory. None of your source code, project files, or Git history are touched.*
-
 ### Step 4: Upgrade Pip and Install the Project
 Upgrade `pip` to the latest version and install the project in editable mode using `python3.12`:
 ```bash
@@ -278,48 +260,117 @@ course-automation auth
 
 ---
 
-## Configuration & Optional AI Setup
+## Configuration & API Key Setup
 
-The tool is **100% functional without any AI provider** for course inspection, syllabus discovery, and theory reading.
+Course Automation operates **100% locally by default and does NOT require an API key** for most core functionality. An API key is only needed if you want automated reasoning for quizzes or starter code generation for programming labs.
 
-If you would like optional AI assistance for reasoning through multiple-choice questions (MCQs):
+---
 
-### 1. Copy the Configuration Template
+### Feature Breakdown: What Requires an API Key?
+
+| Feature | Requires API Key? | Behavior Without API Key |
+|---|---|---|
+| **One-time Login & Auth** (`course-automation auth`) | **No** | Saves session cookies locally in `~/.course_automation/browser_profile`. |
+| **Syllabus Inspection** (`course-automation inspect`) | **No** | Dynamically parses full course units, module percentages, and activity counts. |
+| **Active Tab Detection** (`course-automation inspect`) | **No** | Automatically queries open CodeChef tab in the browser session. |
+| **Module Selection** (`--incomplete-only`, `--select-module`) | **No** | Interactively filters course navigation based on local syllabus discovery. |
+| **Theory Reading Lessons** (`course-automation solve --theory-only`) | **No** | Smoothly scrolls lessons to trigger dynamic MathJax rendering, finds enabled `Next` buttons, and advances. |
+| **Offline Progress Tracking** (`course-automation status`) | **No** | Queries local SQLite database (`~/.course_automation/progress.db`) completely offline. |
+| **Safe Dry-Run Simulations** (`--dry-run`) | **No** | Inspects DOM and navigates without clicking submit buttons or changing progress. |
+| **Automated Test Suite** (`pytest -v`) | **No** | All 67 unit and integration tests run 100% offline using synthetic fixtures and mocks. |
+| **Multiple-Choice Questions (MCQs)** | **Optional** | With API key: reasons about question options and evaluates answer confidence. Without API key: extracts question/options from DOM and reports verdict `INSPECTED_NO_AI` without guessing. |
+| **Coding Exercises & Labs** | **Optional** | With API key: generates language-specific code solutions. Without API key: inspects editor buffer and reports verdict `INSPECTED_NO_AI`. |
+
+> [!NOTE]
+> **Implementation Note on Answer Reasoning:**
+> Course Automation uses the Google Gemini API (`gemini-flash-lite-latest` via the official `google-genai` SDK) for structured prompt reasoning. There is **no separate web search provider or `search.answer` endpoint** in this project; question evaluation and code solutions are powered directly by Gemini when configured.
+
+---
+
+### Step-by-Step API Key Setup (For Students)
+
+If you want automated reasoning for quizzes or coding exercises, follow these steps to configure your own personal key.
+
+#### 1. Obtain a Personal Google Gemini API Key
+1. Go to [Google AI Studio](https://aistudio.google.com/app/apikey).
+2. Sign in with your personal Google account.
+3. Click **Create API Key** and copy your newly generated key.
+
+> [!IMPORTANT]
+> **Student Responsibility & Quota Notice:**
+> - **Each student must configure their own personal API key.** Never share your key with classmates or commit it to GitHub.
+> - The default model `gemini-flash-lite-latest` is eligible for Google's developer free tier.
+> - **API Quotas & Costs:** Free-tier usage is subject to Google's rate limits (requests per minute/day). If you exceed free-tier quotas or configure a paid billing account in Google Cloud, charges may apply according to Google's pricing terms. The maintainers do not supply, sponsor, or guarantee free or unlimited API access.
+
+#### 2. Create Your Local `.env` File
+In the project root directory, copy the configuration template:
+
+**macOS / Linux:**
 ```bash
 cp .env.example .env
 ```
 
-### 2. Install AI Dependencies
+**Windows (PowerShell):**
+```powershell
+Copy-Item .env.example .env
+```
+
+#### 3. Edit `.env` with Your Key
+Open `.env` in any text editor (VS Code, Nano, Notepad, etc.) and configure your settings using placeholder syntax:
+```env
+# Enable the Gemini AI provider (default is 'none')
+AI_PROVIDER=gemini
+
+# Your personal Google AI Studio API key (supports GEMINI_API_KEY or GOOGLE_API_KEY)
+GEMINI_API_KEY=your_gemini_api_key_here
+
+# Model identifier
+GEMINI_MODEL=gemini-flash-lite-latest
+```
+
+#### 4. Install the Optional AI Package
+Ensure the `google-genai` SDK is installed in your virtual environment:
 ```bash
 pip install -e ".[ai]"
 ```
 
-### 3. Configure `.env`
-Open `.env` in any text editor and configure your Google Gemini key:
-```env
-AI_PROVIDER=gemini
-GEMINI_API_KEY=your_google_api_key_here
-GEMINI_MODEL=gemini-flash-lite-latest
+#### 5. Verify That Configuration is Loaded
+Run the CLI configuration diagnostic command:
+```bash
+course-automation config
 ```
+You should see:
+- `AI Provider: gemini`
+- `Gemini Model: gemini-flash-lite-latest`
+- `Gemini API Key: [SET (REDACTED)]`
 
-> [!NOTE]
-> **About Google AI Studio API Keys:**
-> You can generate a personal developer API key from [Google AI Studio](https://aistudio.google.com/app/apikey). The `gemini-flash-lite-latest` model is eligible for Google's free tier for developers.
-> **Disclaimer:** API availability, free tier access, quotas, and rate limits are managed solely by Google and are subject to change. This project does not guarantee unlimited or perpetual free access.
+*(If the key is displayed as `[NOT SET]`, ensure your `.env` file is in the project root directory and the variable name is spelled `GEMINI_API_KEY`).*
+
+---
+
+### Git Safety & Secret Hygiene
+- The `.env` and `.env.local` files are strictly excluded by [`.gitignore`](.gitignore).
+- Verify that your key is ignored by Git:
+  ```bash
+  git status
+  ```
+  Your `.env` file should **never** appear in the output. Never commit or push API keys to Git repositories.
+
+---
 
 ### Configuration Reference
 
-| Setting | Default | Description |
-|---|---|---|
-| `AI_PROVIDER` | `none` | AI provider to use (`gemini` or `none`). |
-| `GEMINI_API_KEY` | None | Google AI Studio API key (`GEMINI_API_KEY` or `GOOGLE_API_KEY`). |
-| `GEMINI_MODEL` | `gemini-flash-lite-latest` | Model identifier for reasoning. |
-| `BROWSER_HEADLESS` | `false` | Run browser in headless mode (`true`/`false`). |
-| `BROWSER_USER_DATA_DIR` | `~/.course_automation/browser_profile` | Local storage location for browser session. |
-| `BROWSER_CDP_URL` | None | Optional CDP endpoint (e.g., `http://127.0.0.1:9222`) if attaching to an external browser. |
-| `DATABASE_PATH` | `~/.course_automation/progress.db` | Local SQLite database for syllabus and progress caching. |
-| `DRY_RUN` | `false` | Global default dry-run flag. |
-| `LOG_LEVEL` | `INFO` | Console log verbosity (`DEBUG`, `INFO`, `WARNING`, `ERROR`). |
+| Setting in `.env` | Alias / Alternative | Default | Description |
+|---|---|---|---|
+| `AI_PROVIDER` | — | `none` | Active provider: `gemini` (enables AI solving) or `none` (manual / theory only). |
+| `GEMINI_API_KEY` | `GOOGLE_API_KEY` | None | Google AI Studio API key. |
+| `GEMINI_MODEL` | — | `gemini-flash-lite-latest` | Model identifier used for reasoning. |
+| `BROWSER_HEADLESS` | — | `false` | Set to `true` to run browser invisibly. |
+| `BROWSER_USER_DATA_DIR` | — | `~/.course_automation/browser_profile` | Directory for authenticated cookies and browser state. |
+| `BROWSER_CDP_URL` | — | None | Optional CDP endpoint (e.g., `http://127.0.0.1:9222`) if attaching to an external Chrome. |
+| `DATABASE_PATH` | — | `~/.course_automation/progress.db` | Local SQLite database for syllabus and progress caching. |
+| `DRY_RUN` | — | `false` | Default dry-run mode for CLI operations. |
+| `LOG_LEVEL` | — | `INFO` | Console log verbosity (`DEBUG`, `INFO`, `WARNING`, `ERROR`). |
 
 ---
 
@@ -446,6 +497,34 @@ ERROR: Package 'course-automation' requires a different Python: 3.9.6 not in '>=
    python --version
    # Expected output: Python 3.12.x
    ```
+
+### 8. CLI Reports `INSPECTED_NO_AI` on Quizzes or Coding Labs
+**Symptom:** During `course-automation solve`, quiz and coding activities log:
+```
+Discovered options; no AI provider configured. (Verdict: INSPECTED_NO_AI)
+```
+**Cause:** `AI_PROVIDER=none` or `GEMINI_API_KEY` is not configured in `.env`.
+**Solution:**
+- To process reading lessons without AI, add the `--theory-only` flag:
+  ```bash
+  course-automation solve <COURSE_URL> --theory-only
+  ```
+- To enable AI reasoning, configure `AI_PROVIDER=gemini` and your `GEMINI_API_KEY` in `.env`, install dependencies with `pip install -e ".[ai]"`, and verify with `course-automation config`.
+
+### 9. Invalid API Key / `400 API_KEY_INVALID` or `403 PERMISSION_DENIED`
+**Symptom:** `google.genai.errors.ClientError: 400 API_KEY_INVALID` or `403 PERMISSION_DENIED`.
+**Cause:** The configured `GEMINI_API_KEY` has a typo, was revoked, or lacks permission for the Gemini API.
+**Solution:**
+1. Generate a fresh API key at [Google AI Studio](https://aistudio.google.com/app/apikey).
+2. Update `GEMINI_API_KEY=your_new_key` in `.env`.
+3. Test with `course-automation config`.
+
+### 10. Rate Limit / Quota Exceeded (`429 RESOURCE_EXHAUSTED`)
+**Symptom:** `google.genai.errors.ClientError: 429 RESOURCE_EXHAUSTED` (Quota exceeded for metric).
+**Cause:** Exceeded Google AI Studio's free tier requests-per-minute or daily quota.
+**Solution:**
+- Wait 60 seconds before retrying.
+- Or pass `--no-ai` / `--theory-only` to continue reading theory lessons without consuming API calls.
 
 ---
 

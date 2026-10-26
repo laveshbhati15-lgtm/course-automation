@@ -288,17 +288,6 @@ source .venv/bin/activate
 python --version</code></pre>
             </div>
 
-            <div class="callout callout-warning">
-              <div class="callout-title">Fixing an Existing Virtual Environment Created with Python 3.9</div>
-              <p>If you previously created <code>.venv</code> with Python 3.9, delete and recreate it cleanly (project files are untouched):</p>
-              <div class="code-block">
-                <div class="code-header"><span>bash</span><button class="copy-btn">Copy</button></div>
-                <pre><code>rm -rf .venv
-python3.12 -m venv .venv
-source .venv/bin/activate</code></pre>
-              </div>
-            </div>
-
             <p><strong>Step 4: Upgrade Pip & Install Project</strong></p>
             <div class="code-block">
               <div class="code-header">
@@ -475,35 +464,116 @@ course-automation config</code></pre>
 
       <!-- Configuration & Optional AI -->
       <section id="config-ai">
-        <h2>Configuration & Optional AI Setup</h2>
+        <h2>Configuration & API Key Setup</h2>
         <p>
-          Course Automation is <strong>100% functional without an AI provider</strong> (default: <code>AI_PROVIDER=none</code>) for syllabus inspection, reading theory lessons, and tracking progress.
+          Course Automation is <strong>100% functional locally without an API key</strong> for core features (auth, syllabus inspection, reading lessons, offline database tracking, dry-run simulation, and offline tests). An API key is only required if you choose to use automated reasoning for quizzes or coding labs.
         </p>
 
-        <h3>Enabling Google Gemini for MCQ Reasoning (Optional)</h3>
-        <p>1. Copy the configuration template:</p>
-        <div class="code-block">
-          <div class="code-header"><span>bash</span><button class="copy-btn">Copy</button></div>
-          <pre><code>cp .env.example .env</code></pre>
-        </div>
-
-        <p>2. Install optional AI dependencies:</p>
-        <div class="code-block">
-          <div class="code-header"><span>bash</span><button class="copy-btn">Copy</button></div>
-          <pre><code>pip install -e ".[ai]"</code></pre>
-        </div>
-
-        <p>3. Edit <code>.env</code> with your Google AI Studio API key:</p>
-        <div class="code-block">
-          <div class="code-header"><span>env</span><button class="copy-btn">Copy</button></div>
-          <pre><code>AI_PROVIDER=gemini
-GEMINI_API_KEY=your_google_ai_studio_api_key_here
-GEMINI_MODEL=gemini-flash-lite-latest</code></pre>
+        <h3>Feature Breakdown: With vs Without API Key</h3>
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Feature</th>
+                <th>Requires API Key?</th>
+                <th>Behavior Without Key</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>One-time Login & Auth</strong> (<code>auth</code>)</td>
+                <td><span class="badge badge-verified">No</span></td>
+                <td>Stores cookies locally in <code>~/.course_automation/browser_profile</code>.</td>
+              </tr>
+              <tr>
+                <td><strong>Syllabus Inspection</strong> (<code>inspect</code>)</td>
+                <td><span class="badge badge-verified">No</span></td>
+                <td>Discovers modules, activities, and completion metrics dynamically.</td>
+              </tr>
+              <tr>
+                <td><strong>Active Tab Auto-Detection</strong></td>
+                <td><span class="badge badge-verified">No</span></td>
+                <td>Connects to active CodeChef tab in the browser session.</td>
+              </tr>
+              <tr>
+                <td><strong>Theory Reading Lessons</strong> (<code>--theory-only</code>)</td>
+                <td><span class="badge badge-verified">No</span></td>
+                <td>Scrolls content, triggers MathJax rendering, and clicks Next to advance.</td>
+              </tr>
+              <tr>
+                <td><strong>Offline SQLite Progress</strong> (<code>status</code>)</td>
+                <td><span class="badge badge-verified">No</span></td>
+                <td>Queries cached course history from local SQLite database.</td>
+              </tr>
+              <tr>
+                <td><strong>Safe Dry-Run Simulations</strong> (<code>--dry-run</code>)</td>
+                <td><span class="badge badge-verified">No</span></td>
+                <td>Simulates lesson advancement and question extraction without mutating data.</td>
+              </tr>
+              <tr>
+                <td><strong>Automated Test Suite</strong> (<code>pytest -v</code>)</td>
+                <td><span class="badge badge-verified">No</span></td>
+                <td>All 67 tests run 100% offline with synthetic DOM fixtures and mocks.</td>
+              </tr>
+              <tr>
+                <td><strong>Multiple-Choice Questions (MCQs)</strong></td>
+                <td><span class="badge badge-unverified">Optional</span></td>
+                <td>With key: reasons and selects option. Without key: logs <code>INSPECTED_NO_AI</code> without guessing.</td>
+              </tr>
+              <tr>
+                <td><strong>Coding Exercises & Labs</strong></td>
+                <td><span class="badge badge-unverified">Optional</span></td>
+                <td>With key: generates solutions. Without key: logs <code>INSPECTED_NO_AI</code> buffer preview.</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
 
         <div class="callout callout-info">
-          <div class="callout-title">Google AI Studio Free Tier Notice</div>
-          <p>Personal developer API keys can be generated at <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" style="color: var(--accent-cyan);">Google AI Studio</a>. The <code>gemini-flash-lite-latest</code> model is eligible for Google's developer free tier. <em>Disclaimer: API availability, quotas, and rate limits are governed by Google. The project does not guarantee unlimited or perpetual free access.</em></p>
+          <div class="callout-title">Architecture Note: Prompt Reasoning vs Search</div>
+          <p>This project uses Google Gemini (<code>gemini-flash-lite-latest</code> via the <code>google-genai</code> SDK) for prompt-based reasoning. There is <strong>no separate search provider or <code>search.answer</code> endpoint</strong> in the codebase; answers and code solutions are evaluated directly by Gemini when configured.</p>
+        </div>
+
+        <h3>Step-by-Step API Key Setup for Students</h3>
+        <ol style="color: var(--text-muted); margin-left: 1.5rem; margin-bottom: 1.5rem; line-height: 1.8;">
+          <li><strong>Obtain your personal key:</strong> Sign in to <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" style="color: var(--accent-cyan);">Google AI Studio</a> with your Google account and click <strong>Create API Key</strong>.</li>
+          <li><strong>Copy template to <code>.env</code>:</strong>
+            <div class="code-block" style="margin-top: 0.5rem;">
+              <div class="code-header"><span>bash</span><button class="copy-btn">Copy</button></div>
+              <pre><code>cp .env.example .env</code></pre>
+            </div>
+          </li>
+          <li><strong>Configure your personal key:</strong> Open <code>.env</code> and set your key using placeholder syntax:
+            <div class="code-block" style="margin-top: 0.5rem;">
+              <div class="code-header"><span>env</span><button class="copy-btn">Copy</button></div>
+              <pre><code>AI_PROVIDER=gemini
+GEMINI_API_KEY=your_gemini_api_key_here
+GEMINI_MODEL=gemini-flash-lite-latest</code></pre>
+            </div>
+          </li>
+          <li><strong>Install optional AI dependencies:</strong>
+            <div class="code-block" style="margin-top: 0.5rem;">
+              <div class="code-header"><span>bash</span><button class="copy-btn">Copy</button></div>
+              <pre><code>pip install -e ".[ai]"</code></pre>
+            </div>
+          </li>
+          <li><strong>Verify configuration:</strong> Confirm that the key is loaded and redacted:
+            <div class="code-block" style="margin-top: 0.5rem;">
+              <div class="code-header"><span>bash</span><button class="copy-btn">Copy</button></div>
+              <pre><code>course-automation config</code></pre>
+            </div>
+            <p style="margin-top: 0.5rem; font-size: 0.88rem;">Output will report <code>AI Provider: gemini</code> and <code>Gemini API Key: [SET (REDACTED)]</code>.</p>
+          </li>
+        </ol>
+
+        <div class="callout callout-warning">
+          <div class="callout-title">Student Responsibility & Quota Notice</div>
+          <p>Each student must configure their <strong>own personal API key</strong>. Never share your key or commit it to GitHub. While <code>gemini-flash-lite-latest</code> operates under Google's developer free tier, usage is subject to rate limits and quotas. The project maintainers do not supply, subsidize, or guarantee free or unlimited API access.</p>
+        </div>
+
+        <div class="callout callout-danger">
+          <div class="callout-title">Git Secret Hygiene</div>
+          <p>Your local <code>.env</code> and <code>.env.local</code> files are strictly excluded by <code>.gitignore</code>. Running <code>git status</code> will never show your <code>.env</code> file. Never hardcode real keys into tracked code.</p>
         </div>
       </section>
 
@@ -685,6 +755,42 @@ source .venv/bin/activate
 python3.12 -m pip install --upgrade pip
 pip install -e .</code></pre>
               </div>
+            </div>
+          </div>
+
+          <div class="accordion-item">
+            <button class="accordion-trigger">
+              <span>8. CLI Reports <code>INSPECTED_NO_AI</code> on Quizzes or Labs</span>
+              <span class="accordion-icon">▼</span>
+            </button>
+            <div class="accordion-content">
+              <p><strong>Symptom:</strong> Running <code>course-automation solve</code> reports verdict <code>INSPECTED_NO_AI</code>.</p>
+              <p><strong>Cause:</strong> <code>AI_PROVIDER=none</code> or <code>GEMINI_API_KEY</code> is not configured in your <code>.env</code> file.</p>
+              <p><strong>Solution:</strong> To process reading lessons without AI, pass <code>--theory-only</code>. To enable AI reasoning, set <code>AI_PROVIDER=gemini</code> and your <code>GEMINI_API_KEY</code> in <code>.env</code>, run <code>pip install -e ".[ai]"</code>, and verify with <code>course-automation config</code>.</p>
+            </div>
+          </div>
+
+          <div class="accordion-item">
+            <button class="accordion-trigger">
+              <span>9. Invalid API Key / <code>400 API_KEY_INVALID</code> or <code>403 PERMISSION_DENIED</code></span>
+              <span class="accordion-icon">▼</span>
+            </button>
+            <div class="accordion-content">
+              <p><strong>Symptom:</strong> Gemini API returns <code>400 API_KEY_INVALID</code> or <code>403 PERMISSION_DENIED</code>.</p>
+              <p><strong>Cause:</strong> Typo in the API key or key revoked in Google AI Studio.</p>
+              <p><strong>Solution:</strong> Generate a fresh key at <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" style="color: var(--accent-cyan);">Google AI Studio</a>, update <code>GEMINI_API_KEY</code> in <code>.env</code>, and check with <code>course-automation config</code>.</p>
+            </div>
+          </div>
+
+          <div class="accordion-item">
+            <button class="accordion-trigger">
+              <span>10. Rate Limit / Quota Exceeded (<code>429 RESOURCE_EXHAUSTED</code>)</span>
+              <span class="accordion-icon">▼</span>
+            </button>
+            <div class="accordion-content">
+              <p><strong>Symptom:</strong> <code>429 RESOURCE_EXHAUSTED</code> (Quota exceeded for metric).</p>
+              <p><strong>Cause:</strong> Exceeded Google AI Studio free tier per-minute or daily quota.</p>
+              <p><strong>Solution:</strong> Wait 60 seconds before retrying, or pass <code>--no-ai</code> / <code>--theory-only</code> to continue reading lessons without consuming API calls.</p>
             </div>
           </div>
         </div>
