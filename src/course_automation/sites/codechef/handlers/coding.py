@@ -1,4 +1,4 @@
-"""Handler for coding exercises, programming labs, and Monaco/Ace editors."""
+"""Handler for coding exercises, programming labs, and Monaco/CodeMirror/Ace editors."""
 
 import re
 from typing import Optional
@@ -40,7 +40,7 @@ class CodingActivityHandler(BaseActivityHandler):
             ]
             for sel in lang_selectors:
                 el = page.locator(sel).first
-                if el.is_visible():
+                if hasattr(el, "is_visible") and el.is_visible():
                     text = el.inner_text().strip().lower()
                     if "c++" in text or "cpp" in text:
                         return "cpp"
@@ -86,9 +86,12 @@ class CodingActivityHandler(BaseActivityHandler):
             "#problem-description",
         ]
         for sel in selectors:
-            el = page.locator(sel).first
-            if el.is_visible():
-                return el.inner_text().strip()
+            try:
+                el = page.locator(sel).first
+                if hasattr(el, "is_visible") and el.is_visible():
+                    return el.inner_text().strip()
+            except Exception:
+                continue
         return ""
 
     def execute(
@@ -98,12 +101,12 @@ class CodingActivityHandler(BaseActivityHandler):
         ai_provider: Optional[BaseAIProvider] = None,
         dry_run: bool = False,
     ) -> SubmissionRecord:
-        """Process coding activity with dynamic language detection and Monaco injection."""
+        """Process coding activity with readiness polling, dynamic language detection, and editor injection."""
         language = self.detect_programming_language(page, activity)
         activity.language = language
 
         statement = self.extract_problem_statement(page) or activity.title
-        starter_code = MonacoEditorController.get_editor_content(page)
+        starter_code = MonacoEditorController.get_editor_content(page) if MonacoEditorController.is_editor_present(page) else ""
 
         logger.info(f"Detected Language: {language} | Starter Code Size: {len(starter_code)} chars")
 
@@ -117,13 +120,14 @@ class CodingActivityHandler(BaseActivityHandler):
                 details="Editor inspected; no AI provider configured.",
             )
 
-        # Generate solution
+        # 1. Generate solution
         solution_code = ai_provider.generate_solution(
             problem_statement=statement,
             language=language,
             starter_code=starter_code,
         )
 
+        # 2. Dry-run safety: In dry-run mode, solution is verified but injection and submission are skipped
         if dry_run:
             logger.info("[DRY-RUN] Solution generated successfully. Injection and submission skipped.")
             return SubmissionRecord(
@@ -134,29 +138,39 @@ class CodingActivityHandler(BaseActivityHandler):
                 details="Dry-run completed successfully.",
             )
 
-        # Inject solution into Monaco
+        # 3. Live readiness polling: ensure editor is mounted and visible
+        if not MonacoEditorController.wait_for_editor_ready(page, timeout_seconds=8.0):
+            logger.warning(f"Editor not mounted or ready within timeout for activity {activity.id}.")
+            return SubmissionRecord(
+                activity_id=activity.id,
+                verdict="EDITOR_NOT_FOUND",
+                language=language,
+                details="Code editor was not mounted or ready within timeout.",
+            )
+
+        # 4. Inject solution into editor and verify buffer content
         injected = MonacoEditorController.set_editor_content(page, solution_code)
         if not injected:
             return SubmissionRecord(
                 activity_id=activity.id,
                 verdict="EDITOR_INJECTION_FAILED",
                 language=language,
-                details="Failed to inject solution into editor.",
+                details="Failed to inject solution into editor or buffer verification failed.",
             )
 
-        # Submit code
+        # 5. Submit code
         submitted = MonacoEditorController.click_submit(page)
         if not submitted:
             return SubmissionRecord(
                 activity_id=activity.id,
                 verdict="SUBMIT_BUTTON_FAILED",
                 language=language,
-                details="Could not click submit button.",
+                details="Could not locate or click enabled submit button.",
             )
 
-        # Poll verdict
+        # 6. Poll platform judge verdict (Only judge ACCEPTED counts as accepted)
         verdict, details = poll_verdict(page)
-        logger.info(f"Verdict: {verdict.value} - {details}")
+        logger.info(f"Platform Judge Verdict: {verdict.value} - {details}")
 
         return SubmissionRecord(
             activity_id=activity.id,
