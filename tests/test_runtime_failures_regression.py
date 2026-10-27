@@ -210,17 +210,18 @@ def test_web_editor_controller_alias():
 # 3. QUIZ HANDLER REGRESSION TESTS
 # ==============================================================================
 
-def test_quiz_unsupported_controls_checkbox_detected():
-    """Verify that question with checkboxes returns UNSUPPORTED_QUESTION_CONTROLS."""
+def test_quiz_unsupported_controls_textarea_detected():
+    """Verify that question with unsupported textarea controls returns UNSUPPORTED_QUESTION_CONTROLS."""
     handler = QuizActivityHandler()
     page = MagicMock()
-    activity = ActivitySummary(id="Q01", title="Multi-Select Quiz", slug="q01", type=ActivityType.QUIZ)
+    activity = ActivitySummary(id="Q01", title="Freeform Essay Quiz", slug="q01", type=ActivityType.QUIZ)
 
-    with patch.object(handler, "extract_question_and_options", return_value=("Select all that apply:", [])),          patch.object(handler, "detect_unsupported_controls", return_value="Checkbox input detected (multi-select MCQ is unsupported)."):
+    with patch.object(handler, "extract_question_and_options", return_value=("Explain Swing architecture:", [])), \
+         patch.object(handler, "detect_unsupported_controls", return_value="Textarea input detected (freeform essay question is unsupported by QuizHandler)."):
         record = handler.execute(activity, page, dry_run=False)
 
     assert record.verdict == "UNSUPPORTED_QUESTION_CONTROLS"
-    assert "Checkbox input detected" in record.details
+    assert "Textarea input detected" in record.details
 
 
 def test_quiz_question_options_not_found():
@@ -644,3 +645,300 @@ def test_quiz_option_detection_direct_radio_inputs():
     assert len(options) == 2
     assert "No, Swing is not thread safe" in options[0]["label"]
     assert "Yes, Swing is completely thread safe" in options[1]["label"]
+
+
+def test_quiz_option_detection_checkbox_inputs():
+    """Verify that options rendered with checkboxes in CodeChef DOM are extracted with input_type='checkbox'."""
+    handler = QuizActivityHandler()
+    page = MagicMock()
+    page.frames = [page]
+
+    stmt = MagicMock()
+    stmt.count.return_value = 1
+    stmt.is_visible.return_value = True
+    stmt.inner_text.return_value = "Which of the following are valid Swing components? (Select all that apply)"
+
+    opt1 = MagicMock()
+    opt1.inner_text.return_value = "JButton"
+    cb1 = MagicMock()
+    cb1.count.return_value = 1
+    cb1.is_checked.return_value = False
+    cb1.get_attribute.return_value = "checkbox"
+    opt1.locator.return_value.first = cb1
+
+    opt2 = MagicMock()
+    opt2.inner_text.return_value = "JFrame"
+    cb2 = MagicMock()
+    cb2.count.return_value = 1
+    cb2.is_checked.return_value = False
+    cb2.get_attribute.return_value = "checkbox"
+    opt2.locator.return_value.first = cb2
+
+    opt3 = MagicMock()
+    opt3.inner_text.return_value = "JNotAComponent"
+    cb3 = MagicMock()
+    cb3.count.return_value = 1
+    cb3.is_checked.return_value = False
+    cb3.get_attribute.return_value = "checkbox"
+    opt3.locator.return_value.first = cb3
+
+    def mock_loc(sel):
+        mock = MagicMock()
+        if "statement" in sel:
+            mock.first = stmt
+            mock.count.return_value = 1
+            return mock
+        if "[class*='_optionBox_']" in sel:
+            mock.all.return_value = [opt1, opt2, opt3]
+            mock.count.return_value = 3
+            return mock
+        mock.all.return_value = []
+        mock.count.return_value = 0
+        mock.first.count.return_value = 0
+        mock.first.is_visible.return_value = False
+        return mock
+
+    page.locator.side_effect = mock_loc
+
+    q_text, options = handler.extract_question_and_options(page)
+    assert len(options) == 3
+    assert options[0]["label"] == "JButton"
+    assert options[0]["input_type"] == "checkbox"
+    assert options[1]["label"] == "JFrame"
+    assert options[1]["input_type"] == "checkbox"
+
+    is_multi, is_ambig = handler.determine_question_type(options, q_text)
+    assert is_multi is True
+    assert is_ambig is False
+
+
+def test_quiz_checkbox_multi_select_dry_run():
+    """Verify that checkbox multi-select MCQ in dry-run reports all intended selections and does not click."""
+    handler = QuizActivityHandler()
+    page = MagicMock()
+    page.frames = [page]
+
+    loc1 = MagicMock()
+    loc2 = MagicMock()
+    options = [
+        {"index": 1, "label": "JButton", "locator": loc1, "frame": page, "is_checked": False, "input_type": "checkbox"},
+        {"index": 2, "label": "JFrame", "locator": loc2, "frame": page, "is_checked": False, "input_type": "checkbox"},
+        {"index": 3, "label": "JNonComponent", "locator": MagicMock(), "frame": page, "is_checked": False, "input_type": "checkbox"},
+    ]
+
+    activity = ActivitySummary(
+        id="JAVASWING_MULTI",
+        title="Quiz Application Using Java Swing",
+        slug="javaswing_multi",
+        type=ActivityType.QUIZ,
+    )
+
+    ai_provider = MagicMock()
+    ai_provider.reason_mcq.return_value = MCQReasoningResult(
+        question="Select all valid Swing components",
+        options=["JButton", "JFrame", "JNonComponent"],
+        selected_option_indices=[1, 2],
+        selected_option_texts=["JButton", "JFrame"],
+        is_multiple_choice=True,
+        confidence=0.96,
+        explanation="JButton and JFrame are standard javax.swing top-level/control components.",
+        requires_human_confirmation=False,
+    )
+
+    with patch.object(handler, "wait_for_options_or_question_ready", return_value=True), \
+         patch.object(handler, "extract_question_and_options", return_value=("Select all valid Swing components", options)):
+        record = handler.execute(activity, page, ai_provider=ai_provider, dry_run=True)
+
+    assert record.verdict == "DRY_RUN_PASSED"
+    assert "multiple-select" in record.details
+    assert "Option [1] ('JButton')" in record.details
+    assert "Option [2] ('JFrame')" in record.details
+    # Locators must NOT be clicked in dry-run
+    loc1.click.assert_not_called()
+    loc2.click.assert_not_called()
+
+
+def test_quiz_checkbox_multi_select_live_execution():
+    """Verify that live execution of checkbox multi-select clicks all options, verifies submit, and confirms feedback."""
+    handler = QuizActivityHandler()
+    page = MagicMock()
+    page.frames = [page]
+
+    loc1 = MagicMock()
+    cb1 = MagicMock()
+    cb1.count.return_value = 1
+    cb1.is_checked.return_value = True
+    loc1.locator.return_value.first = cb1
+
+    loc2 = MagicMock()
+    cb2 = MagicMock()
+    cb2.count.return_value = 1
+    cb2.is_checked.return_value = True
+    loc2.locator.return_value.first = cb2
+
+    options = [
+        {"index": 1, "label": "JButton", "locator": loc1, "frame": page, "is_checked": False, "input_type": "checkbox"},
+        {"index": 2, "label": "JFrame", "locator": loc2, "frame": page, "is_checked": False, "input_type": "checkbox"},
+    ]
+
+    activity = ActivitySummary(
+        id="JAVASWING_LIVE",
+        title="Quiz Application Using Java Swing",
+        slug="javaswing_live",
+        type=ActivityType.QUIZ,
+    )
+
+    ai_provider = MagicMock()
+    ai_provider.reason_mcq.return_value = MCQReasoningResult(
+        question="Select all valid Swing components",
+        options=["JButton", "JFrame"],
+        selected_option_indices=[1, 2],
+        selected_option_texts=["JButton", "JFrame"],
+        is_multiple_choice=True,
+        confidence=0.95,
+        explanation="Both are Swing components.",
+        requires_human_confirmation=False,
+    )
+
+    submit_btn = MagicMock()
+    submit_btn.count.return_value = 1
+    submit_btn.is_visible.return_value = True
+    submit_btn.is_enabled.return_value = True
+
+    def mock_loc(sel):
+        mock = MagicMock()
+        if "Submit" in sel:
+            mock.first = submit_btn
+            mock.count.return_value = 1
+            mock.is_visible.return_value = True
+            mock.is_enabled.return_value = True
+            return mock
+        mock.all.return_value = []
+        mock.count.return_value = 0
+        mock.first.count.return_value = 0
+        mock.first.is_visible.return_value = False
+        mock.first.is_enabled.return_value = False
+        return mock
+
+    page.locator.side_effect = mock_loc
+
+    with patch.object(handler, "wait_for_options_or_question_ready", return_value=True), \
+         patch.object(handler, "extract_question_and_options", return_value=("Select components", options)), \
+         patch.object(handler, "verify_submission_feedback", return_value=(True, "Correct Answer")):
+        record = handler.execute(activity, page, ai_provider=ai_provider, dry_run=False)
+
+    assert record.verdict == "ACCEPTED"
+    assert "Option [1] ('JButton')" in record.details
+    assert "Option [2] ('JFrame')" in record.details
+    loc1.click.assert_called_once()
+    loc2.click.assert_called_once()
+    submit_btn.click.assert_called_once()
+
+
+def test_quiz_ambiguous_question_mixed_controls_never_submits():
+    """Verify that question with conflicting radio and checkbox inputs is flagged ambiguous and never submits."""
+    handler = QuizActivityHandler()
+    page = MagicMock()
+    page.frames = [page]
+
+    loc1 = MagicMock()
+    loc2 = MagicMock()
+    options = [
+        {"index": 1, "label": "Option A", "locator": loc1, "frame": page, "is_checked": False, "input_type": "radio"},
+        {"index": 2, "label": "Option B", "locator": loc2, "frame": page, "is_checked": False, "input_type": "checkbox"},
+    ]
+
+    activity = ActivitySummary(
+        id="AMBIG_01",
+        title="Ambiguous Quiz Activity",
+        slug="ambig_01",
+        type=ActivityType.QUIZ,
+    )
+    ai_provider = MagicMock()
+
+    with patch.object(handler, "wait_for_options_or_question_ready", return_value=True), \
+         patch.object(handler, "extract_question_and_options", return_value=("Ambiguous Question?", options)):
+        record = handler.execute(activity, page, ai_provider=ai_provider, dry_run=False)
+
+    assert record.verdict == "AMBIGUOUS_QUESTION_CONTROLS"
+    assert "ambiguous" in record.details.lower()
+    loc1.click.assert_not_called()
+    loc2.click.assert_not_called()
+    ai_provider.reason_mcq.assert_not_called()
+
+
+def test_quiz_ambiguous_question_conflicting_statement_and_controls_never_submits():
+    """Verify that question with conflicting cues between statement and controls is flagged ambiguous."""
+    handler = QuizActivityHandler()
+    page = MagicMock()
+    page.frames = [page]
+
+    loc1 = MagicMock()
+    loc2 = MagicMock()
+    options = [
+        {"index": 1, "label": "Option A", "locator": loc1, "frame": page, "is_checked": False, "input_type": "checkbox"},
+        {"index": 2, "label": "Option B", "locator": loc2, "frame": page, "is_checked": False, "input_type": "checkbox"},
+    ]
+
+    activity = ActivitySummary(
+        id="AMBIG_02",
+        title="Conflicting Cues Quiz Activity",
+        slug="ambig_02",
+        type=ActivityType.QUIZ,
+    )
+    ai_provider = MagicMock()
+
+    # Statement explicitly demands "Select only one", but controls are multi-select checkboxes
+    conflicting_statement = "Select only one correct answer for this problem:"
+
+    with patch.object(handler, "wait_for_options_or_question_ready", return_value=True), \
+         patch.object(handler, "extract_question_and_options", return_value=(conflicting_statement, options)):
+        record = handler.execute(activity, page, ai_provider=ai_provider, dry_run=False)
+
+    assert record.verdict == "AMBIGUOUS_QUESTION_CONTROLS"
+    assert "ambiguous" in record.details.lower()
+    loc1.click.assert_not_called()
+    loc2.click.assert_not_called()
+    ai_provider.reason_mcq.assert_not_called()
+
+
+def test_quiz_low_confidence_mcq_never_submits_without_human_confirmation():
+    """Verify that low-confidence (<85%) reasoning blocks automatic submission for safety."""
+    handler = QuizActivityHandler()
+    page = MagicMock()
+    page.frames = [page]
+
+    loc1 = MagicMock()
+    loc2 = MagicMock()
+    options = [
+        {"index": 1, "label": "Option A", "locator": loc1, "frame": page, "is_checked": False, "input_type": "radio"},
+        {"index": 2, "label": "Option B", "locator": loc2, "frame": page, "is_checked": False, "input_type": "radio"},
+    ]
+
+    activity = ActivitySummary(
+        id="LOW_CONF",
+        title="Uncertain Question",
+        slug="low_conf",
+        type=ActivityType.QUIZ,
+    )
+
+    ai_provider = MagicMock()
+    ai_provider.reason_mcq.return_value = MCQReasoningResult(
+        question="Uncertain question?",
+        options=["Option A", "Option B"],
+        selected_option_index=1,
+        selected_option_text="Option A",
+        confidence=0.55,  # Low confidence!
+        explanation="Not sure.",
+        requires_human_confirmation=True,
+    )
+
+    with patch.object(handler, "wait_for_options_or_question_ready", return_value=True), \
+         patch.object(handler, "extract_question_and_options", return_value=("Uncertain question?", options)):
+        # In non-interactive test environment without stdin confirmation
+        record = handler.execute(activity, page, ai_provider=ai_provider, dry_run=False)
+
+    assert record.verdict == "USER_DECLINED"
+    assert "Human confirmation required" in record.details
+    loc1.click.assert_not_called()
+    loc2.click.assert_not_called()
